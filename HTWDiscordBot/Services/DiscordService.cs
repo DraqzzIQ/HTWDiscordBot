@@ -7,52 +7,56 @@ namespace HTWDiscordBot.Services
 {
     internal class DiscordService
     {
-        public DiscordSocketClient client { get; private set; }
-        private ConfigService configService;
-        private DiscordSocketConfig discordSocketConfig;
+        public readonly DiscordSocketClient client;
+        private readonly ConfigService configService;
+        private readonly DiscordSocketConfig discordSocketConfig;
 
         public DiscordService(DiscordSocketConfig discordSocketConfig, ConfigService configService)
         {
             this.discordSocketConfig = discordSocketConfig;
             this.configService = configService;
+
+            ConfigureAsync();
+            client = new(discordSocketConfig);
         }
 
         public async Task InitializeAsync()
         {
-            await ConfigureAsync();
-            client = new DiscordSocketClient(discordSocketConfig);
-
             client.Ready += Client_Ready;
             await client.LoginAsync(TokenType.Bot, configService.Config.Token);
             await client.StartAsync();
         }
 
-        private Task ConfigureAsync()
+        //Konfiguriert die DiscordSocketConfig
+        private void ConfigureAsync()
         {
             discordSocketConfig.GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.Guilds;
             discordSocketConfig.LogGatewayIntentWarnings = false;
-            return Task.CompletedTask;
         }
 
+        //Wird ausgeführt, wenn der Bot bereit ist
         private async Task Client_Ready()
         {
             await ConfigureGlobalCommands();
             await client.SetGameAsync("Hack The Web", type: ActivityType.Playing);
         }
+
+        //Erstellt die Slash Commands
         private async Task ConfigureGlobalCommands()
         {
             IReadOnlyCollection<SocketApplicationCommand> globalCommands = await client.GetGlobalApplicationCommandsAsync();
 
-            SlashCommandBuilder startCommand = new SlashCommandBuilder();
+            SlashCommandBuilder startCommand = new();
             startCommand.WithName("start");
             startCommand.WithDescription("Startet das Tracking der Aufgaben");
 
-            SlashCommandBuilder stopCommand = new SlashCommandBuilder();
+            SlashCommandBuilder stopCommand = new();
             stopCommand.WithName("stop");
             stopCommand.WithDescription("Stoppt das Tracking der Aufgaben");
 
             try
             {
+                //Wenn Slash Command nicht existiert, wird er erstellt
                 if (!globalCommands.Any(x => x.Name == "start"))
                     await client.CreateGlobalApplicationCommandAsync(startCommand.Build());
 

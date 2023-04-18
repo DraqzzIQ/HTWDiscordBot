@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace HTWDiscordBot.Services
 {
-    //Klasse um auf die Hack The Web Seite zuzugreifen
+    //Stellt Funktionen bereit um auf die Hack The Web Seite zuzugreifen
     internal class HTWService
     {
         private readonly DiscordService discordService;
@@ -15,7 +15,6 @@ namespace HTWDiscordBot.Services
         private readonly int delayInSeconds = 30;
         private readonly string path = "challengeID.txt";
         private bool shouldCheck = true;
-
 
         public HTWService(DiscordService discordService, ConfigService configService, HttpClientService httpService)
         {

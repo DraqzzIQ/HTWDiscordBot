@@ -1,13 +1,17 @@
 ﻿namespace HTWDiscordBot.Services
 {
+    //Stellt einen HttpClient bereit
     internal class HttpClientService
     {
         public readonly HttpClient httpClient;
         public readonly HttpClientHandler httpHandler;
-        public HttpClientService()
+        private readonly Uri url;
+
+        public HttpClientService(ConfigService configService)
         {
+            url = new(configService.Config.Url);
             httpHandler = new HttpClientHandler() { UseCookies = false, AllowAutoRedirect = false };
-            httpClient = new HttpClient(httpHandler);
+            httpClient = new HttpClient(httpHandler) { BaseAddress = url };
         }
     }
 }

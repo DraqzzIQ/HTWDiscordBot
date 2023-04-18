@@ -1,16 +1,11 @@
 ﻿namespace HTWDiscordBot.Services
 {
+    //Stellt Konfigurationsdaten bereit
     internal class ConfigService
     {
-        private readonly string path;
-        public Config Config { get; private set; }
+        public readonly Config Config;
 
         public ConfigService(string path = ".env")
-        {
-            this.path = path;
-        }
-
-        public async Task InitializeAsync()
         {
             if (!File.Exists(path))
             {
@@ -21,7 +16,7 @@
             //1. Zeile Username
             //2. Zeile Password
             //3. Zeile Discord Bot Token
-            string[] content = await File.ReadAllLinesAsync(path);
+            string[] content = File.ReadAllLines(path);
             Config = new(content[0].Trim(), content[1].Trim(), content[2].Trim());
         }
     }
@@ -31,6 +26,7 @@
         public readonly string Username;
         public readonly string Password;
         public readonly string Token;
+        public readonly string Url = "https://hack.arrrg.de/";
 
         public Config(string username, string password, string token)
         {

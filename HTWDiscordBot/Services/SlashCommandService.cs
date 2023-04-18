@@ -2,10 +2,11 @@
 
 namespace HTWDiscordBot.Services
 {
+    //Regestriert Slash Commands
     internal class SlashCommandService
     {
-        private DiscordService discordService;
-        private HTWService htwService;
+        private readonly DiscordService discordService;
+        private readonly HTWService htwService;
 
         public SlashCommandService(DiscordService discordService, HTWService htwService)
         {
@@ -19,6 +20,7 @@ namespace HTWDiscordBot.Services
             return Task.CompletedTask;
         }
 
+        //Wird ausgeführt, wenn ein Slash Command ausgeführt wird
         private async Task SlashCommandHandler(SocketSlashCommand command)
         {
             switch (command.Data.Name)
@@ -32,12 +34,14 @@ namespace HTWDiscordBot.Services
             }
         }
 
+        //Startet die Überprüfung auf neue Aufgaben
         private async Task HandleStartCommand(SocketSlashCommand command)
         {
             await command.RespondAsync("Started");
             await htwService.SetShouldCheck(true);
         }
 
+        //Stoppt die Überprüfung auf neue Aufgaben
         private async Task HandleStopCommand(SocketSlashCommand command)
         {
             await command.RespondAsync("Stopped");

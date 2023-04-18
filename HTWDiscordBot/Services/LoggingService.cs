@@ -2,6 +2,7 @@
 
 namespace HTWDiscordBot.Services
 {
+    //Stellt eine Log-Methode bereit
     internal class LoggingService
     {
         private readonly DiscordService discordService;
