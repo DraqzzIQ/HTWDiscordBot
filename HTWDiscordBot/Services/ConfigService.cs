@@ -2,7 +2,7 @@
 {
     internal class ConfigService
     {
-        private string path;
+        private readonly string path;
         public Config Config { get; private set; }
 
         public ConfigService(string path = ".env")

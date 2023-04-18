@@ -23,4 +23,4 @@ bot-token    //Zeile 3
 ID //z.B. 69
 ```
 ## How it works
-Jede 30 Sekunden wird eine Anfrage an `https://hack.arrrg.de/challenge/{ID}` gesendet. Wenn die Seite existiert, wird der Statuscode OK(200) zurückgegeben. Andernfalls wird Redirect(302) zurückgegeben, da man auf die Startseite weitergeleited wird.
+Jede 30 Sekunden wird eine Anfrage an `https://hack.arrrg.de/challenge/{ID}` gesendet. Wenn die Seite existiert, wird der Statuscode `OK(200)` zurückgegeben. Andernfalls wird `Redirect(302)` zurückgegeben, da man auf die Startseite weitergeleited wird.

@@ -43,7 +43,8 @@ public class Program
             .AddSingleton<ConfigService>()
             .AddSingleton<SlashCommandService>()
             .AddSingleton<HTWService>()
-            .AddSingleton<DiscordSocketConfig>();
+            .AddSingleton<DiscordSocketConfig>()
+            .AddSingleton<HttpClientService>();
 
         return collection.BuildServiceProvider();
     }
