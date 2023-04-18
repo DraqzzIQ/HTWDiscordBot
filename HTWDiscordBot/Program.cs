@@ -43,7 +43,8 @@ namespace HTWDiscordBot
                 .AddSingleton<SlashCommandService>()
                 .AddSingleton<HTWService>()
                 .AddSingleton<DiscordSocketConfig>()
-                .AddSingleton<HttpClientService>();
+                .AddSingleton<HttpClientService>()
+                .AddSingleton<HtmlParserService>();
 
             return collection.BuildServiceProvider();
         }

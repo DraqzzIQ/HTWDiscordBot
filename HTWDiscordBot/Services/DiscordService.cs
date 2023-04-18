@@ -22,7 +22,7 @@ namespace HTWDiscordBot.Services
 
         public async Task InitializeAsync()
         {
-            client.Ready += Client_Ready;
+            client.Ready += Client_ReadyAsync;
             await client.LoginAsync(TokenType.Bot, configService.Config.Token);
             await client.StartAsync();
         }
@@ -35,14 +35,14 @@ namespace HTWDiscordBot.Services
         }
 
         //Wird ausgeführt, wenn der Bot bereit ist
-        private async Task Client_Ready()
+        private async Task Client_ReadyAsync()
         {
-            await ConfigureGlobalCommands();
+            await ConfigureGlobalCommandsAsync();
             await client.SetGameAsync("Hack The Web", type: ActivityType.Playing);
         }
 
         //Erstellt die Slash Commands
-        private async Task ConfigureGlobalCommands()
+        private async Task ConfigureGlobalCommandsAsync()
         {
             IReadOnlyCollection<SocketApplicationCommand> globalCommands = await client.GetGlobalApplicationCommandsAsync();
 
@@ -54,6 +54,10 @@ namespace HTWDiscordBot.Services
             stopCommand.WithName("stop");
             stopCommand.WithDescription("Stoppt das Tracking der Aufgaben");
 
+            SlashCommandBuilder scoreboardCommand = new();
+            scoreboardCommand.WithName("scoreboard");
+            scoreboardCommand.WithDescription("Zeigt das Scoreboard an");
+
             try
             {
                 //Wenn Slash Command nicht existiert, wird er erstellt
@@ -62,6 +66,9 @@ namespace HTWDiscordBot.Services
 
                 if (!globalCommands.Any(x => x.Name == "stop"))
                     await client.CreateGlobalApplicationCommandAsync(stopCommand.Build());
+
+                if (!globalCommands.Any(x => x.Name == "scoreboard"))
+                    await client.CreateGlobalApplicationCommandAsync(scoreboardCommand.Build());
             }
             catch (HttpException exception)
             {

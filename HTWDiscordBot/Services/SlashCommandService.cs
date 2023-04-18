@@ -1,4 +1,5 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.WebSocket;
 
 namespace HTWDiscordBot.Services
 {
@@ -7,11 +8,13 @@ namespace HTWDiscordBot.Services
     {
         private readonly DiscordService discordService;
         private readonly HTWService htwService;
+        private readonly HtmlParserService htmlParserService;
 
         public SlashCommandService(DiscordService discordService, HTWService htwService)
         {
             this.discordService = discordService;
             this.htwService = htwService;
+            this.htmlParserService = htmlParserService;
         }
 
         public Task InitializeAsync()
@@ -26,26 +29,41 @@ namespace HTWDiscordBot.Services
             switch (command.Data.Name)
             {
                 case "start":
-                    await HandleStartCommand(command);
+                    await HandleStartCommandAsync(command);
                     break;
                 case "stop":
-                    await HandleStopCommand(command);
+                    await HandleStopCommandAsync(command);
+                    break;
+                case "scoreboard":
+                    await HandleScoreboardCommandAsync(command);
                     break;
             }
         }
 
         //Startet die Überprüfung auf neue Aufgaben
-        private async Task HandleStartCommand(SocketSlashCommand command)
+        private async Task HandleStartCommandAsync(SocketSlashCommand command)
         {
             await command.RespondAsync("Started");
-            await htwService.SetShouldCheck(true);
+            await htwService.SetShouldCheckAsync(true);
         }
 
         //Stoppt die Überprüfung auf neue Aufgaben
-        private async Task HandleStopCommand(SocketSlashCommand command)
+        private async Task HandleStopCommandAsync(SocketSlashCommand command)
         {
             await command.RespondAsync("Stopped");
-            await htwService.SetShouldCheck(false);
+            await htwService.SetShouldCheckAsync(false);
+        }
+
+        //Gibt das Scoreboard aus
+        private async Task HandleScoreboardCommandAsync(SocketSlashCommand command)
+        {
+            Embed scoreboard = new EmbedBuilder()
+                .WithTitle("Scoreboard")
+                .WithColor(Color.Blue)
+                .WithDescription(await htwService.GetScoreboardAsync())
+                .WithCurrentTimestamp().Build();
+
+            await command.RespondAsync(embed: scoreboard);
         }
     }
 }
