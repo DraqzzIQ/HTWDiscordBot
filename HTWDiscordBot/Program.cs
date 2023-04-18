@@ -37,7 +37,7 @@ public class Program
 
     static IServiceProvider CreateProvider()
     {
-        var collection = new ServiceCollection()
+        IServiceCollection collection = new ServiceCollection()
             .AddSingleton<DiscordService>()
             .AddSingleton<LoggingService>()
             .AddSingleton<ConfigService>()
