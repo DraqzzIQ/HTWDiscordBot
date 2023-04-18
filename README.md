@@ -9,6 +9,8 @@ Benachrichtigt wenn eine neue Aufgabe auf [Hack The Web](https://hack.arrrg.de/)
 
 `/start` um zu reaktivieren
 
+`/scoreboard` um das Scoreboard anzeigen zu lassen
+
 ## Config
 
 `.env` Datei im Stammverzeichnis:
