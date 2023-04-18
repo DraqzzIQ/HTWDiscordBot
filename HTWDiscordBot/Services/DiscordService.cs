@@ -41,13 +41,13 @@ namespace HTWDiscordBot.Services
         }
         private async Task ConfigureGlobalCommands()
         {
-            var globalCommands = await client.GetGlobalApplicationCommandsAsync();
+            IReadOnlyCollection<SocketApplicationCommand> globalCommands = await client.GetGlobalApplicationCommandsAsync();
 
-            var startCommand = new SlashCommandBuilder();
+            SlashCommandBuilder startCommand = new SlashCommandBuilder();
             startCommand.WithName("start");
             startCommand.WithDescription("Startet das Tracking der Aufgaben");
 
-            var stopCommand = new SlashCommandBuilder();
+            SlashCommandBuilder stopCommand = new SlashCommandBuilder();
             stopCommand.WithName("stop");
             stopCommand.WithDescription("Stoppt das Tracking der Aufgaben");
 
@@ -62,7 +62,7 @@ namespace HTWDiscordBot.Services
             catch (HttpException exception)
             {
                 // Wenn Command ungültig
-                var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
+                string json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
                 Console.WriteLine(json);
             }
         }
