@@ -1,4 +1,5 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.WebSocket;
 using System.Net;
 using System.Text.RegularExpressions;
 
@@ -7,7 +8,7 @@ namespace HTWDiscordBot.Services
     //Stellt Funktionen bereit um auf die Hack The Web Seite zuzugreifen
     internal class HTWService
     {
-        private readonly DiscordService discordService;
+        private readonly DiscordSocketClient client;
         private readonly ConfigService configService;
         private readonly HttpClientService httpService;
         private readonly HtmlParserService htmlParserService;
@@ -15,10 +16,13 @@ namespace HTWDiscordBot.Services
         private readonly int delayInSeconds = 30;
         private readonly string path = "challengeID.txt";
         private bool shouldCheck = true;
+        private readonly string challengeUpdateChannel = "htwbot";
+        private readonly string scoreboardChannel = "scoreboard";
+        private string cachedScoreboard = "";
 
-        public HTWService(DiscordService discordService, ConfigService configService, HttpClientService httpService, HtmlParserService htmlParserService)
+        public HTWService(DiscordSocketClient client, ConfigService configService, HttpClientService httpService, HtmlParserService htmlParserService)
         {
-            this.discordService = discordService;
+            this.client = client;
             this.configService = configService;
             this.httpService = httpService;
             this.htmlParserService = htmlParserService;
@@ -55,14 +59,50 @@ namespace HTWDiscordBot.Services
             {
                 if (shouldCheck)
                 {
-                    await CheckForNewChallenge();
+                    await CheckForNewChallengeAsync();
+                    await CheckForScoreboardChangeAsync(await GetScoreboardAsync());
                 }
                 await Task.Delay(delayInSeconds * 1000);
             }
         }
 
+        //Überprüft, ob das Scoreboard geändert wurde
+        private async Task CheckForScoreboardChangeAsync(string scoreboard)
+        {
+            if (cachedScoreboard != scoreboard)
+            {
+                cachedScoreboard = scoreboard;
+            }
+            await UpdateScoreboardAsync(scoreboard);
+        }
+
+        //Updated das Scoreboard
+        private async Task UpdateScoreboardAsync(string scoreboard)
+        {
+            foreach (SocketGuild socketGuild in client.Guilds)
+            {
+                if (!socketGuild.TextChannels.Any(c => c.Name == scoreboardChannel))
+                    await socketGuild.CreateTextChannelAsync(scoreboardChannel);
+
+                foreach (SocketTextChannel textChannel in socketGuild.TextChannels)
+                {
+                    if (textChannel.Name == scoreboardChannel)
+                    {
+                        IMessage message = textChannel.GetMessagesAsync(1).FlattenAsync().Result.First();
+
+                        if (message.Author.Id != client.CurrentUser.Id)
+                            await textChannel.SendMessageAsync(embed: CreateScoreboardEmbed(scoreboard));
+                        else
+                            await textChannel.ModifyMessageAsync(message.Id, m => m.Embed = CreateScoreboardEmbed(scoreboard));
+
+                        break;
+                    }
+                }
+            }
+        }
+
         //Überprüft ob neue Aufgaben vorhanden sind
-        private async Task CheckForNewChallenge()
+        private async Task CheckForNewChallengeAsync()
         {
             string authCookie = await GetAuthCookieAsync();
             int challengeID = await ReadChallengeIDAsync();
@@ -78,7 +118,7 @@ namespace HTWDiscordBot.Services
                 Console.WriteLine("New challenge available");
                 challengeID++;
                 await WriteChallengeIDAsync(challengeID);
-                await UpdateAsync($"{configService.Config.Url}challenge/{challengeID}");
+                await UpdateChallengeAsync($"{configService.Config.Url}challenge/{challengeID}");
             }
             //Wenn keine neue Aufgabe vorhanden ist, wird man auf die Startseite weitergeleitet (HttpStatusCode.Redirect)
             else if (responseMessage.StatusCode == HttpStatusCode.Redirect)
@@ -110,21 +150,21 @@ namespace HTWDiscordBot.Services
         }
 
         //Benachrichtigt alle Discord Server auf denen der Bot sich befindet, dass es eine neue Aufgabe gibt
-        private async Task UpdateAsync(string url)
+        private async Task UpdateChallengeAsync(string url)
         {
-            foreach (SocketGuild socketGuild in discordService.client.Guilds)
+            foreach (SocketGuild socketGuild in client.Guilds)
             {
-                if (!socketGuild.TextChannels.Any(c => c.Name == "htwbot"))
-                    await socketGuild.CreateTextChannelAsync("htwbot").Result.SendMessageAsync($"@everyone Neue Aufgabe: {url}");
-                else
-                    foreach (SocketTextChannel textChannel in socketGuild.TextChannels)
+                if (!socketGuild.TextChannels.Any(c => c.Name == challengeUpdateChannel))
+                    await socketGuild.CreateTextChannelAsync(challengeUpdateChannel);
+
+                foreach (SocketTextChannel textChannel in socketGuild.TextChannels)
+                {
+                    if (textChannel.Name == challengeUpdateChannel)
                     {
-                        if (textChannel.Name == "htwbot")
-                        {
-                            await textChannel.SendMessageAsync($"@everyone Neue Aufgabe: {url}");
-                            break;
-                        }
+                        await textChannel.SendMessageAsync($"@everyone Neue Aufgabe: {url}");
+                        break;
                     }
+                }
             }
         }
 
@@ -153,6 +193,17 @@ namespace HTWDiscordBot.Services
             Regex regex = new(@"connect\.sid=([^;]+);");
             Match match = regex.Match(cookieString);
             return match.Groups[1].Value;
+        }
+
+        //Erstellt einen Embed mit dem Scoreboard
+        private static Embed CreateScoreboardEmbed(string scoreboard)
+        {
+            EmbedBuilder embedBuilder = new EmbedBuilder()
+            .WithTitle("Scoreboard")
+            .WithDescription(scoreboard)
+            .WithColor(Color.Blue)
+            .WithCurrentTimestamp();
+            return embedBuilder.Build();
         }
     }
 }

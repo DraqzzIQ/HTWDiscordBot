@@ -1,4 +1,6 @@
-﻿using Discord.WebSocket;
+﻿using Discord.Interactions;
+using Discord.WebSocket;
+using HTWDiscordBot.handlers;
 using HTWDiscordBot.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -7,44 +9,54 @@ namespace HTWDiscordBot
     public class Program
     {
         private readonly IServiceProvider services;
+        private readonly DiscordSocketClient client;
         private readonly DiscordService discordService;
         private readonly LoggingService loggingService;
-        private readonly SlashCommandService slashCommandService;
         private readonly HTWService htwService;
+        private readonly InteractionHandler interactionHandler;
 
         public Program()
         {
             services = CreateProvider();
+            client = services.GetRequiredService<DiscordSocketClient>();
             discordService = services.GetRequiredService<DiscordService>();
             loggingService = services.GetRequiredService<LoggingService>();
-            slashCommandService = services.GetRequiredService<SlashCommandService>();
             htwService = services.GetRequiredService<HTWService>();
+            interactionHandler = services.GetRequiredService<InteractionHandler>();
         }
 
         public static Task Main() => new Program().MainAsync();
 
         public async Task MainAsync()
         {
+            client.Ready += Client_ReadyAsync;
+            client.Log += loggingService.LogAsync;
             await discordService.InitializeAsync();
-            await loggingService.InitializeAsync();
-            await slashCommandService.InitializeAsync();
-            await htwService.InitializeAsync();
+            await interactionHandler.InitializeAsync();
 
             await Task.Delay(Timeout.Infinite);
+        }
+
+        //Wird ausgeführt, wenn der Bot bereit ist
+        private async Task Client_ReadyAsync()
+        {
+            await htwService.InitializeAsync();
         }
 
         //ServiceProvider für Dependency Injection
         private static IServiceProvider CreateProvider()
         {
             IServiceCollection collection = new ServiceCollection()
-                .AddSingleton<DiscordService>()
-                .AddSingleton<LoggingService>()
                 .AddSingleton<ConfigService>()
-                .AddSingleton<SlashCommandService>()
+                .AddSingleton(DiscordService.CreateDiscordSockteConfig())
+                .AddSingleton<DiscordSocketClient>()
+                .AddSingleton<DiscordService>()
+                .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
+                .AddSingleton<LoggingService>()
                 .AddSingleton<HTWService>()
-                .AddSingleton<DiscordSocketConfig>()
                 .AddSingleton<HttpClientService>()
-                .AddSingleton<HtmlParserService>();
+                .AddSingleton<HtmlParserService>()
+                .AddSingleton<InteractionHandler>();
 
             return collection.BuildServiceProvider();
         }
