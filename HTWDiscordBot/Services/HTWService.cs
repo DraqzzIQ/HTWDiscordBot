@@ -48,6 +48,14 @@ namespace HTWDiscordBot.Services
             return htmlParserService.ParseScoreBoard(await responseMessage.Content.ReadAsStringAsync());
         }
 
+        public async Task<string> GetPlayerDataAsync(SocketSlashCommandDataOption username)
+        {
+            HttpRequestMessage requestMessage = new(HttpMethod.Get, "highscore");
+            HttpResponseMessage responseMessage = await httpService.httpClient.SendAsync(requestMessage);
+
+            return htmlParserService.GetPlayerData(await responseMessage.Content.ReadAsStringAsync(),username.Value.ToString());
+        }
+
         //Läuft jede 30 Sekunden um auf neue Aufgaben zu prüfen
         private async Task LoopAsync()
         {

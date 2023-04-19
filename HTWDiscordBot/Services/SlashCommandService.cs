@@ -37,6 +37,9 @@ namespace HTWDiscordBot.Services
                 case "scoreboard":
                     await HandleScoreboardCommandAsync(command);
                     break;
+                case "playerdata":
+                    await HandlePlayerDataCommandAsync(command);
+                    break;
             }
         }
 
@@ -64,6 +67,17 @@ namespace HTWDiscordBot.Services
                 .WithCurrentTimestamp().Build();
 
             await command.RespondAsync(embed: scoreboard);
+        }
+
+        private async Task HandlePlayerDataCommandAsync(SocketSlashCommand command)
+        {
+            Embed playerData = new EmbedBuilder()
+                    .WithTitle("Player-Daten")
+                    .WithColor(Color.Blue)
+                    .WithDescription(await htwService.GetPlayerDataAsync(command.Data.Options.First()))
+                    .WithCurrentTimestamp().Build();
+
+            await command.RespondAsync(embed: playerData);
         }
     }
 }

@@ -58,6 +58,11 @@ namespace HTWDiscordBot.Services
             scoreboardCommand.WithName("scoreboard");
             scoreboardCommand.WithDescription("Zeigt das Scoreboard an");
 
+            SlashCommandBuilder playerDataCommand = new();
+            playerDataCommand.WithName("playerdata");
+            playerDataCommand.WithDescription("Zeigt die Scoreboard-Daten von einem bestimmten Splieler an");
+            playerDataCommand.AddOption("username", ApplicationCommandOptionType.String,"Der Benutzername des Spielers dessen Daten angezeigt werden sollen", isRequired: true);
+
             try
             {
                 //Wenn Slash Command nicht existiert, wird er erstellt
@@ -69,6 +74,9 @@ namespace HTWDiscordBot.Services
 
                 if (!globalCommands.Any(x => x.Name == "scoreboard"))
                     await client.CreateGlobalApplicationCommandAsync(scoreboardCommand.Build());
+                
+                if(!globalCommands.Any(x => x.Name == "playerdata"))
+                    await client.CreateGlobalApplicationCommandAsync(playerDataCommand.Build());
             }
             catch (HttpException exception)
             {
