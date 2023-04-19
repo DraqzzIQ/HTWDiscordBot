@@ -79,6 +79,8 @@ namespace HTWDiscordBot.Services
         //Updated das Scoreboard
         private async Task UpdateScoreboardAsync(string scoreboard)
         {
+            Console.WriteLine("Updating Scoreboard");
+
             foreach (SocketGuild socketGuild in client.Guilds)
             {
                 if (!socketGuild.TextChannels.Any(c => c.Name == scoreboardChannel))
@@ -116,8 +118,7 @@ namespace HTWDiscordBot.Services
             if (responseMessage.StatusCode == HttpStatusCode.OK)
             {
                 Console.WriteLine("New challenge available");
-                challengeID++;
-                await WriteChallengeIDAsync(challengeID);
+                await WriteChallengeIDAsync(challengeID + 1);
                 await UpdateChallengeAsync($"{configService.Config.Url}challenge/{challengeID}");
             }
             //Wenn keine neue Aufgabe vorhanden ist, wird man auf die Startseite weitergeleitet (HttpStatusCode.Redirect)
