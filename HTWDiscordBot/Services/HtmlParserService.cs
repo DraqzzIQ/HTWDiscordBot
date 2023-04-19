@@ -29,7 +29,7 @@ namespace HTWDiscordBot.Services
             HtmlDocument document = LoadHtml(html);
             string correctPlayerData = "**" + String.Format("{0,-6} {1,-9} {2,-40}", "Platz", "Punktzahl", "Benutzername").Replace(" ", "᲼") + "**";
 
-            foreach (HtmlNode player in document.DocumentNode.SelectSingleNode("/html/body/div/table/tbody").Descendants("tr").Take(25))
+            foreach (HtmlNode player in document.DocumentNode.SelectSingleNode("/html/body/div/table/tbody").Descendants("tr"))
             {
                 List<HtmlNode> playerData = player.Descendants("td").ToList();
 
