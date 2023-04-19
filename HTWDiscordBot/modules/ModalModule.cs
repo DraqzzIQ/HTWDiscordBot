@@ -20,12 +20,12 @@ namespace HTWDiscordBot.modules
         [RequiredInput(true)]
         [InputLabel("Username")]
         [ModalTextInput("username", placeholder: "demo", minLength: 3)]
-        public string Username { get; set; }
+        public string Username { get; set; } = "";
 
         [RequiredInput(true)]
         [InputLabel("Password")]
         [ModalTextInput("password", placeholder: "1234", minLength: 4)]
-        public string Password { get; set; }
+        public string Password { get; set; } = "";
     }
 
 }

@@ -90,9 +90,9 @@ namespace HTWDiscordBot.Services
                 {
                     if (textChannel.Name == scoreboardChannel)
                     {
-                        IMessage message = textChannel.GetMessagesAsync(1).FlattenAsync().Result.First();
+                        IMessage? message = textChannel.GetMessagesAsync(1).FlattenAsync().Result.FirstOrDefault();
 
-                        if (message.Author.Id != client.CurrentUser.Id)
+                        if (message == null || message.Author.Id != client.CurrentUser.Id)
                             await textChannel.SendMessageAsync(embed: CreateScoreboardEmbed(scoreboard));
                         else
                             await textChannel.ModifyMessageAsync(message.Id, m => m.Embed = CreateScoreboardEmbed(scoreboard));
