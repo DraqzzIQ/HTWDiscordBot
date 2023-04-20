@@ -1,4 +1,5 @@
 ﻿using Discord.Interactions;
+using HTWDiscordBot.Services.HTW;
 
 namespace HTWDiscordBot.Modules
 {
@@ -6,11 +7,16 @@ namespace HTWDiscordBot.Modules
     //Muss public sein, um vom InteractionHandler erkannt zu werden
     public class ModalModule : InteractionModuleBase<SocketInteractionContext>
     {
+        private readonly HTWUserService verifyUserService;
+
+        public ModalModule(HTWUserService verifyUserService)
+        {
+            this.verifyUserService = verifyUserService;
+        }
+
         [ModalInteraction("login")]
         public async Task VerifyLoginInfo(LoginModal modal)
-        {
-            await RespondAsync("Login successful", ephemeral: true);
-        }
+           => await RespondAsync(await verifyUserService.IsRealUserAsync(modal.Username, modal.Password, Context.User.Id), ephemeral: true);
     }
 
     public class LoginModal : IModal

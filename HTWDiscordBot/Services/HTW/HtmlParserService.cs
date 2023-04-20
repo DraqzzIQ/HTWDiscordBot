@@ -5,6 +5,9 @@ namespace HTWDiscordBot.Services
     //Parsed die HTML-Datei in ein Scoreboard
     public class HtmlParserService
     {
+        private readonly string scoreboardPath = "/html/body/div/table/tbody";
+        private readonly string usernamePath = "/html/body/div[1]/p/strong[1]";
+
         public HtmlParserService()
         {
         }
@@ -15,7 +18,7 @@ namespace HTWDiscordBot.Services
             HtmlDocument document = LoadHtml(html);
             string scoreboard = "**" + String.Format("{0,-6} {1,-9} {2,-40}", "Platz", "Punktzahl", "Benutzername").Replace(" ", "᲼") + "**";
 
-            foreach (HtmlNode player in document.DocumentNode.SelectSingleNode("/html/body/div/table/tbody").Descendants("tr").Take(50))
+            foreach (HtmlNode player in document.DocumentNode.SelectSingleNode(scoreboardPath).Descendants("tr").Take(50))
             {
                 List<HtmlNode> playerData = player.Descendants("td").ToList();
 
@@ -24,8 +27,38 @@ namespace HTWDiscordBot.Services
             return scoreboard;
         }
 
+        //Versucht einen Username aus der HTML-Datei zu parsen
+        public string? ParseUsername(string html)
+        {
+            HtmlDocument document = LoadHtml(html);
+
+            HtmlNode username = document.DocumentNode.SelectSingleNode(usernamePath);
+
+            if (username == null)
+                return null;
+
+            return username.InnerText;
+        }
+
+        public List<HtmlNode>? GetScoreBoardEntry(string html, string username)
+        {
+            HtmlDocument document = LoadHtml(html);
+
+            foreach (HtmlNode player in document.DocumentNode.SelectSingleNode(scoreboardPath).Descendants("tr"))
+            {
+                List<HtmlNode> playerData = player.Descendants("td").ToList();
+
+                if (playerData[1].InnerText == username)
+                {
+                    return playerData;
+                }
+            }
+
+            return null;
+        }
+
         //Lädt die HTML-Datei aus einem string
-        private HtmlDocument LoadHtml(string html)
+        private static HtmlDocument LoadHtml(string html)
         {
             HtmlDocument document = new();
             document.LoadHtml(html);

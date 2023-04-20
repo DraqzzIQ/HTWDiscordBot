@@ -15,6 +15,7 @@ namespace HTWDiscordBot
         private readonly LoggingService loggingService;
         private readonly HTWService htwService;
         private readonly InteractionHandler interactionHandler;
+        private readonly HTWUserService userService;
 
         public Program()
         {
@@ -24,6 +25,7 @@ namespace HTWDiscordBot
             loggingService = services.GetRequiredService<LoggingService>();
             htwService = services.GetRequiredService<HTWService>();
             interactionHandler = services.GetRequiredService<InteractionHandler>();
+            userService = services.GetRequiredService<HTWUserService>();
         }
 
         public static Task Main() => new Program().MainAsync();
@@ -32,6 +34,8 @@ namespace HTWDiscordBot
         {
             client.Ready += Client_ReadyAsync;
             client.Log += loggingService.LogAsync;
+
+            await userService.InitializeAsync();
             await discordService.InitializeAsync();
             await interactionHandler.InitializeAsync();
 
@@ -48,19 +52,20 @@ namespace HTWDiscordBot
         private static IServiceProvider CreateProvider()
         {
             IServiceCollection collection = new ServiceCollection()
+                .AddSingleton<LoggingService>()
                 .AddSingleton<ConfigService>()
                 .AddSingleton(DiscordService.CreateDiscordSockteConfig())
                 .AddSingleton<DiscordSocketClient>()
                 .AddSingleton<DiscordService>()
                 .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
-                .AddSingleton<LoggingService>()
                 .AddSingleton<HTWService>()
                 .AddSingleton<AuthentificationService>()
                 .AddSingleton<ScoreboardService>()
                 .AddSingleton<ChallengeService>()
                 .AddSingleton<HttpClientService>()
                 .AddSingleton<HtmlParserService>()
-                .AddSingleton<InteractionHandler>();
+                .AddSingleton<InteractionHandler>()
+                .AddSingleton<HTWUserService>();
 
             return collection.BuildServiceProvider();
         }

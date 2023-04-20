@@ -2,7 +2,7 @@
 
 namespace HTWDiscordBot.Services
 {
-    //Stellt eine Log-Methode bereit
+    //Stellt Logging Methoden bereit
     public class LoggingService
     {
         public Task LogAsync(LogMessage message)
@@ -10,6 +10,11 @@ namespace HTWDiscordBot.Services
             Console.WriteLine($"[General/{message.Severity}] {message}");
 
             return Task.CompletedTask;
+        }
+
+        public void Log(LogMessage message)
+        {
+            Console.WriteLine($"[General/{message.Severity}] {message}");
         }
     }
 }

@@ -30,9 +30,12 @@ namespace HTWDiscordBot.Services
         //Konfiguriert die DiscordSocketConfig
         public static DiscordSocketConfig CreateDiscordSockteConfig()
         {
-            DiscordSocketConfig discordSocketConfig = new();
-            discordSocketConfig.GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers;
-            discordSocketConfig.LogGatewayIntentWarnings = false;
+            DiscordSocketConfig discordSocketConfig = new()
+            {
+                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers | GatewayIntents.GuildPresences,
+                LogGatewayIntentWarnings = false
+            };
+
             return discordSocketConfig;
         }
     }
