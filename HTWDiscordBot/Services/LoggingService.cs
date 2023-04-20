@@ -3,7 +3,7 @@
 namespace HTWDiscordBot.Services
 {
     //Stellt eine Log-Methode bereit
-    internal class LoggingService
+    public class LoggingService
     {
         public Task LogAsync(LogMessage message)
         {

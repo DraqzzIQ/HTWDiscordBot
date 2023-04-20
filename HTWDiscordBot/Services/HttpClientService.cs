@@ -1,7 +1,7 @@
 ﻿namespace HTWDiscordBot.Services
 {
     //Stellt einen HttpClient bereit
-    internal class HttpClientService
+    public class HttpClientService
     {
         public readonly HttpClient httpClient;
         public readonly HttpClientHandler httpHandler;

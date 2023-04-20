@@ -3,7 +3,7 @@
 namespace HTWDiscordBot.Services
 {
     //Parsed die HTML-Datei in ein Scoreboard
-    internal class HtmlParserService
+    public class HtmlParserService
     {
         public HtmlParserService()
         {
@@ -15,7 +15,7 @@ namespace HTWDiscordBot.Services
             HtmlDocument document = LoadHtml(html);
             string scoreboard = "**" + String.Format("{0,-6} {1,-9} {2,-40}", "Platz", "Punktzahl", "Benutzername").Replace(" ", "᲼") + "**";
 
-            foreach (HtmlNode player in document.DocumentNode.SelectSingleNode("/html/body/div/table/tbody").Descendants("tr").Take(25))
+            foreach (HtmlNode player in document.DocumentNode.SelectSingleNode("/html/body/div/table/tbody").Descendants("tr").Take(50))
             {
                 List<HtmlNode> playerData = player.Descendants("td").ToList();
 

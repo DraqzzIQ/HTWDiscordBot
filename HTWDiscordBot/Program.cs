@@ -1,7 +1,8 @@
 ﻿using Discord.Interactions;
 using Discord.WebSocket;
-using HTWDiscordBot.handlers;
+using HTWDiscordBot.Handlers;
 using HTWDiscordBot.Services;
+using HTWDiscordBot.Services.HTW;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace HTWDiscordBot
@@ -54,6 +55,9 @@ namespace HTWDiscordBot
                 .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
                 .AddSingleton<LoggingService>()
                 .AddSingleton<HTWService>()
+                .AddSingleton<AuthentificationService>()
+                .AddSingleton<ScoreboardService>()
+                .AddSingleton<ChallengeService>()
                 .AddSingleton<HttpClientService>()
                 .AddSingleton<HtmlParserService>()
                 .AddSingleton<InteractionHandler>();

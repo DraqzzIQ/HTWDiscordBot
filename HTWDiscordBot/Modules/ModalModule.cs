@@ -1,6 +1,6 @@
 ﻿using Discord.Interactions;
 
-namespace HTWDiscordBot.modules
+namespace HTWDiscordBot.Modules
 {
     //WIP
     //Muss public sein, um vom InteractionHandler erkannt zu werden

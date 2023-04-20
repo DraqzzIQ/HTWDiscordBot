@@ -6,10 +6,6 @@ Benachrichtigt wenn eine neue Aufgabe auf [Hack The Web](https://hack.arrrg.de/)
 
 ## Usage
 
-`/stop` um zu deaktivieren
-
-`/start` um zu reaktivieren
-
 `/login` um seinen HTW Account mit seinem Discord Account zu verknüpfen.
 Dadurch wird sein aktueller Rank neben seinem Namen angezeigt.
 Es werden **keine** Anmeldedaten gespeichert
@@ -22,9 +18,11 @@ Als `username` kann `demo` und als `password` kann `1234` verwendet werden.
 `.env` Datei im Stammverzeichnis:
 
 ```
-htw-username //Zeile 1
-htw-password //Zeile 2
-bot-token    //Zeile 3
+htw-username           //Zeile 1
+htw-password           //Zeile 2
+bot-token              //Zeile 3
+scoreboard-channel-id  //Zeile 4
+challenge-channel-id   //Zeile 5
 ```
 
 `challengeID.txt` Datei im Stammverzeichnis:

@@ -3,7 +3,7 @@ using Discord.WebSocket;
 
 namespace HTWDiscordBot.Services
 {
-    internal class DiscordService
+    public class DiscordService
     {
         private readonly DiscordSocketClient client;
         private readonly ConfigService configService;
@@ -21,6 +21,12 @@ namespace HTWDiscordBot.Services
             await client.StartAsync();
         }
 
+        //Wird ausgeführt, wenn der Bot bereit ist
+        private async Task Client_ReadyAsync()
+        {
+            await client.SetGameAsync("Hack The Web", type: ActivityType.Playing);
+        }
+
         //Konfiguriert die DiscordSocketConfig
         public static DiscordSocketConfig CreateDiscordSockteConfig()
         {
@@ -28,12 +34,6 @@ namespace HTWDiscordBot.Services
             discordSocketConfig.GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers;
             discordSocketConfig.LogGatewayIntentWarnings = false;
             return discordSocketConfig;
-        }
-
-        //Wird ausgeführt, wenn der Bot bereit ist
-        private async Task Client_ReadyAsync()
-        {
-            await client.SetGameAsync("Hack The Web", type: ActivityType.Playing);
         }
     }
 }

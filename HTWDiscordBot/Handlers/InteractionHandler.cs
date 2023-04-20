@@ -4,10 +4,10 @@ using Discord.WebSocket;
 using HTWDiscordBot.Services;
 using System.Reflection;
 
-namespace HTWDiscordBot.handlers
+namespace HTWDiscordBot.Handlers
 {
     //Handelt alle Art von Interaktionen
-    internal class InteractionHandler
+    public class InteractionHandler
     {
         private readonly DiscordSocketClient client;
         private readonly InteractionService interactionService;
