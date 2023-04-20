@@ -83,7 +83,7 @@ namespace HTWDiscordBot.Services.HTW
                     continue;
                 }
                 //Bot hat nicht genug Rechte
-                if (user.Hierarchy > guild.GetUser(client.CurrentUser.Id).Hierarchy)
+                if (user.Hierarchy >= guild.GetUser(client.CurrentUser.Id).Hierarchy)
                 {
                     await user.Guild.GetTextChannel(configService.Config.ChallengeChannelID).SendMessageAsync($"{MentionUtils.MentionUser(pair.Key)} Ich habe nicht genug Rechte um deinen Nicknamen zu ändern :(");
                     verifiedUsers.Remove(pair.Key);
