@@ -1,5 +1,4 @@
 ﻿using Discord.Interactions;
-using HTWDiscordBot.Services;
 using HTWDiscordBot.Services.HTW;
 
 namespace HTWDiscordBot.Modules
@@ -7,7 +6,7 @@ namespace HTWDiscordBot.Modules
     //Muss public sein, um vom InteractionHandler erkannt zu werden
     public class SlashCommandModule : InteractionModuleBase<SocketInteractionContext>
     {
-        private readonly ScoreboardService scoreboardService; 
+        private readonly ScoreboardService scoreboardService;
 
         public SlashCommandModule(ScoreboardService scoreboardService)
         {
@@ -19,7 +18,7 @@ namespace HTWDiscordBot.Modules
         public async Task Login()
             => await RespondWithModalAsync<LoginModal>("login");
 
-        [SlashCommand("playerdata", "Zeigt den Platz auf dem Scoreboard und punkte eines Spielers an")]
+        [SlashCommand("player", "Zeigt den Platz auf dem Scoreboard und punkte eines Spielers an")]
         public async Task Playerdata([Summary(description: "Der Hack The Web Username")] string username)
         {
             if (await scoreboardService.GetPlayerdataAsync(username) != null)

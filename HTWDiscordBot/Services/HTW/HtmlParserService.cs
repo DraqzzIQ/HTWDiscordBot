@@ -40,17 +40,18 @@ namespace HTWDiscordBot.Services
             return username.InnerText;
         }
 
+        //Extrahiert einen bestimmten Eintrag aus dem Scoreboard
         public List<HtmlNode>? GetScoreBoardEntry(string html, string username)
         {
             HtmlDocument document = LoadHtml(html);
 
             foreach (HtmlNode player in document.DocumentNode.SelectSingleNode(scoreboardPath).Descendants("tr"))
             {
-                List<HtmlNode> playerData = player.Descendants("td").ToList();
+                List<HtmlNode> entry = player.Descendants("td").ToList();
 
-                if (playerData[1].InnerText == username)
+                if (entry[1].InnerText == username)
                 {
-                    return playerData;
+                    return entry;
                 }
             }
 

@@ -10,6 +10,8 @@ Benachrichtigt wenn eine neue Aufgabe auf [Hack The Web](https://hack.arrrg.de/)
 Dadurch wird sein aktueller Rank neben seinem Namen angezeigt.
 Es werden **keine** Anmeldedaten gespeichert
 
+`/player` `<username>` um den Scoreboard-Eintrag eines Spielers anzuzeigen
+
 ## Config
 
 Als `username` kann `demo` und als `password` kann `1234` verwendet werden.

@@ -51,33 +51,24 @@ namespace HTWDiscordBot.Services.HTW
             return htmlParserService.ParseScoreBoard(await responseMessage.Content.ReadAsStringAsync());
         }
 
+        //Gibt den Scoreboard Eintrag eines Spielers zurück
         public async Task<Embed?> GetPlayerdataAsync(string username)
         {
             HttpRequestMessage requestMessage = new(HttpMethod.Get, "highscore");
             HttpResponseMessage responseMessage = await httpService.httpClient.SendAsync(requestMessage);
 
-            string playerdata = "**" + String.Format("{0,-6} {1,-9} {2,-40}", "Platz", "Punktzahl", "Benutzername").Replace(" ", "᲼") + "**";
+            string playerData = "**" + String.Format("{0,-6} {1,-9} {2,-40}", "Platz", "Punktzahl", "Benutzername").Replace(" ", "᲼") + "**";
 
             List<HtmlNode>? scoreboardEntry = htmlParserService.GetScoreBoardEntry(await responseMessage.Content.ReadAsStringAsync(), username);
 
             if (scoreboardEntry != null)
             {
-                playerdata += String.Format("\n{0,-5} {1,-9} {2,-40}", scoreboardEntry[0].InnerText, scoreboardEntry[2].InnerText, scoreboardEntry[1].InnerText).Replace(" ", "᲼");
+                playerData += String.Format("\n{0,-5} {1,-9} {2,-40}", scoreboardEntry[0].InnerText, scoreboardEntry[2].InnerText, scoreboardEntry[1].InnerText).Replace(" ", "᲼");
 
-                return CreatePlayerdataEmbed(playerdata);
+                return CreateScoreboardEmbed(playerData);
             }
             else
                 return null;
-        }
-
-        private static Embed CreatePlayerdataEmbed(string playerdata)
-        {
-            EmbedBuilder embedBuilder = new EmbedBuilder()
-                .WithTitle("Playerdata")
-                .WithDescription(playerdata)
-                .WithColor(Color.Blue)
-                .WithCurrentTimestamp();
-            return embedBuilder.Build();
         }
 
         //Erstellt einen Embed mit dem Scoreboard
