@@ -8,16 +8,16 @@ namespace HTWDiscordBot.Services.HTW
     public class ChallengeService
     {
         private readonly DiscordSocketClient client;
-        private readonly HttpClientService httpService;
+        private readonly IHttpClientFactory httpClientFactory;
         private readonly AuthentificationService authentificationService;
         private readonly ConfigService configService;
         private readonly LoggingService loggingService;
         private readonly string path = "challengeID.txt";
 
-        public ChallengeService(DiscordSocketClient client, HttpClientService httpService, AuthentificationService authentificationService, ConfigService configService, LoggingService loggingService)
+        public ChallengeService(DiscordSocketClient client, IHttpClientFactory httpClientFactory, AuthentificationService authentificationService, ConfigService configService, LoggingService loggingService)
         {
             this.client = client;
-            this.httpService = httpService;
+            this.httpClientFactory = httpClientFactory;
             this.authentificationService = authentificationService;
             this.configService = configService;
             this.loggingService = loggingService;
@@ -26,20 +26,22 @@ namespace HTWDiscordBot.Services.HTW
         //Überprüft ob neue Aufgaben vorhanden sind
         public async Task CheckForNewChallengeAsync(Dictionary<string, string> requestContent, ulong textChannelID)
         {
+            HttpClient httpClient = httpClientFactory.CreateClient("client");
+
             string authCookie = await authentificationService.GetAuthCookieAsync(requestContent);
             int challengeID = await ReadChallengeIDAsync();
 
             //Checkt ob neue Aufgabe vorhanden ist
             HttpRequestMessage requestMessage = new(HttpMethod.Get, $"challenge/{challengeID}");
             requestMessage.Headers.Add("Cookie", $"connect.sid={authCookie}");
-            HttpResponseMessage responseMessage = await httpService.httpClient.SendAsync(requestMessage);
+            HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage);
 
             //Wenn neue Aufgabe vorhanden ist, lädt die Seite (HttpStatusCode.OK)
             if (responseMessage.StatusCode == HttpStatusCode.OK)
             {
                 Console.WriteLine("New challenge available");
                 await WriteChallengeIDAsync(challengeID + 1);
-                await UpdateChallengeAsync($"{configService.Config.Url}challenge/{challengeID}", textChannelID);
+                await UpdateChallengeAsync($"{Config.Url}challenge/{challengeID}", textChannelID);
             }
             //Wenn keine neue Aufgabe vorhanden ist, wird man auf die Startseite weitergeleitet (HttpStatusCode.Redirect)
             else if (responseMessage.StatusCode == HttpStatusCode.Redirect)

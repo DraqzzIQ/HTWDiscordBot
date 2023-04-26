@@ -62,10 +62,19 @@ namespace HTWDiscordBot
                 .AddSingleton<AuthentificationService>()
                 .AddSingleton<ScoreboardService>()
                 .AddSingleton<ChallengeService>()
-                .AddSingleton<HttpClientService>()
                 .AddSingleton<HtmlParserService>()
                 .AddSingleton<InteractionHandler>()
                 .AddSingleton<HTWUserService>();
+            collection.AddHttpClient("client", httpClient =>
+            {
+                httpClient.BaseAddress = new Uri(Config.Url);
+
+            }).ConfigurePrimaryHttpMessageHandler((c) =>
+            new HttpClientHandler()
+            {
+                UseCookies = false,
+                AllowAutoRedirect = false
+            });
 
             return collection.BuildServiceProvider();
         }

@@ -5,16 +5,18 @@ namespace HTWDiscordBot.Services.HTW
     //Authentifierungs Logik
     public class AuthentificationService
     {
-        private readonly HttpClientService httpService;
+        private readonly IHttpClientFactory httpClientFactory;
 
-        public AuthentificationService(HttpClientService httpService)
+        public AuthentificationService(IHttpClientFactory httpClientFactory)
         {
-            this.httpService = httpService;
+            this.httpClientFactory = httpClientFactory;
         }
 
         //Authentifiziert sich mit konfiguriertem Nutzername und Passwort und gibt den Session Cookie zurück
         public async Task<string> GetAuthCookieAsync(Dictionary<string, string> requestContent)
         {
+            HttpClient httpClient = httpClientFactory.CreateClient("client");
+
             string authCookie = "";
 
             //HttpRequestMessage um den session id cookie zu bekommen
@@ -22,7 +24,7 @@ namespace HTWDiscordBot.Services.HTW
 
             //Fügt die login Daten hinzu
             requestMessage.Content = new FormUrlEncodedContent(requestContent);
-            HttpResponseMessage responseMessage = await httpService.httpClient.SendAsync(requestMessage);
+            HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage);
 
             //Liest den Cookie mit der session id aus
             foreach (string cookie in responseMessage.Headers.SingleOrDefault(header => header.Key == "Set-Cookie").Value)

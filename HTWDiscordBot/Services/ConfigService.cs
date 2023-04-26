@@ -41,7 +41,7 @@ namespace HTWDiscordBot.Services
         public readonly ulong ScoreboardChannelID;
         public readonly ulong ChallengeChannelID;
         public readonly ulong ServerID;
-        public readonly string Url = "https://hack.arrrg.de/";
+        public const string Url = "https://hack.arrrg.de/";
 
         public Config(string username, string password, string token, ulong scoreboardChannelID, ulong challengeChannelID, ulong serverID)
         {

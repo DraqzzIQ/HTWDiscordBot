@@ -8,14 +8,14 @@ namespace HTWDiscordBot.Services.HTW
     public class ScoreboardService
     {
         private readonly DiscordSocketClient client;
-        private readonly HttpClientService httpService;
+        private readonly IHttpClientFactory httpClientFactory;
         private readonly HtmlParserService htmlParserService;
         private readonly LoggingService loggingService;
 
-        public ScoreboardService(DiscordSocketClient client, HttpClientService httpService, HtmlParserService htmlParserService, LoggingService loggingService)
+        public ScoreboardService(DiscordSocketClient client, IHttpClientFactory httpClientFactory, HtmlParserService htmlParserService, LoggingService loggingService)
         {
             this.client = client;
-            this.httpService = httpService;
+            this.httpClientFactory = httpClientFactory;
             this.htmlParserService = htmlParserService;
             this.loggingService = loggingService;
         }
@@ -23,6 +23,8 @@ namespace HTWDiscordBot.Services.HTW
         //Updated das Scoreboard
         public async Task UpdateScoreboardAsync(ulong textChannelID)
         {
+            HttpClient httpClient = httpClientFactory.CreateClient("client");
+
             SocketTextChannel? textChannel = await client.GetChannelAsync(textChannelID) as SocketTextChannel;
 
             if (textChannel == null)
@@ -45,8 +47,10 @@ namespace HTWDiscordBot.Services.HTW
         //Gibt ein Scoreboard als String zurück
         private async Task<string> GetScoreboardAsync()
         {
+            HttpClient httpClient = httpClientFactory.CreateClient("client");
+
             HttpRequestMessage requestMessage = new(HttpMethod.Get, "highscore");
-            HttpResponseMessage responseMessage = await httpService.httpClient.SendAsync(requestMessage);
+            HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage);
 
             return htmlParserService.ParseScoreBoard(await responseMessage.Content.ReadAsStringAsync());
         }
@@ -54,8 +58,10 @@ namespace HTWDiscordBot.Services.HTW
         //Gibt den Scoreboard Eintrag eines Spielers zurück
         public async Task<Embed?> GetPlayerdataAsync(string username)
         {
+            HttpClient httpClient = httpClientFactory.CreateClient("client");
+
             HttpRequestMessage requestMessage = new(HttpMethod.Get, "highscore");
-            HttpResponseMessage responseMessage = await httpService.httpClient.SendAsync(requestMessage);
+            HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage);
 
             string playerData = "**" + String.Format("{0,-6} {1,-9} {2,-40}", "Platz", "Punktzahl", "Benutzername").Replace(" ", "᲼") + "**";
 
