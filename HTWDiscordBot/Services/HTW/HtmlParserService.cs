@@ -16,15 +16,17 @@ namespace HTWDiscordBot.Services
         public string ParseScoreBoard(string html)
         {
             HtmlDocument document = LoadHtml(html);
-            string scoreboard = "**" + String.Format("{0,-6} {1,-9} {2,-40}", "Platz", "Punktzahl", "Benutzername").Replace(" ", "᲼") + "**";
+            string codeblock = $"```ansi\n\u001b[1;32mPlatz  Punktzahl Benutzername\u001b[0m\n";
 
             foreach (HtmlNode player in document.DocumentNode.SelectSingleNode(scoreboardPath).Descendants("tr").Take(50))
             {
                 List<HtmlNode> playerData = player.Descendants("td").ToList();
-
-                scoreboard += String.Format("\n{0,-5} {1,-9} {2,-40}", playerData[0].InnerText, playerData[2].InnerText, playerData[1].InnerText).Replace(" ", "᲼");
+                
+                codeblock += $"{playerData[0].InnerText.PadRight(2)}\t {playerData[2].InnerText}\t  {playerData[1].InnerText}\n";
             }
-            return scoreboard;
+
+            codeblock += "```";
+            return codeblock;
         }
 
         //Versucht einen Username aus der HTML-Datei zu parsen
