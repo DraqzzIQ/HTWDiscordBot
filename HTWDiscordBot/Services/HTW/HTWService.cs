@@ -1,4 +1,5 @@
-﻿using HTWDiscordBot.Services.HTW;
+﻿using Discord;
+using HTWDiscordBot.Services.HTW;
 
 namespace HTWDiscordBot.Services
 {
@@ -9,22 +10,25 @@ namespace HTWDiscordBot.Services
         private readonly ScoreboardService scoreboardService;
         private readonly ChallengeService challengeService;
         private readonly HTWUserService htwUserService;
+        private readonly LoggingService loggingService;
         private readonly Dictionary<string, string> requestContent = new();
         private readonly int delayInSeconds = 30;
 
-        public HTWService(ConfigService configService, ScoreboardService scoreboardService, ChallengeService challengeService, HTWUserService htwUserService)
+        public HTWService(ConfigService configService, ScoreboardService scoreboardService, ChallengeService challengeService, HTWUserService htwUserService, LoggingService loggingService)
         {
             this.configService = configService;
             this.scoreboardService = scoreboardService;
             this.challengeService = challengeService;
             this.htwUserService = htwUserService;
+            this.loggingService = loggingService;
         }
 
         public Task InitializeAsync()
         {
-            Task.Run(() => LoopAsync());
             requestContent.Add("username", configService.Config.Username);
             requestContent.Add("password", configService.Config.Password);
+
+            Task.Run(() => LoopAsync()).ContinueWith(t => loggingService.Log(new(LogSeverity.Critical, "HTWService Loop", t.Exception?.ToString())));
             return Task.CompletedTask;
         }
 

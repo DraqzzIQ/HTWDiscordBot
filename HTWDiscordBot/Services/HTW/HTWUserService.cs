@@ -9,18 +9,16 @@ namespace HTWDiscordBot.Services.HTW
     {
         private readonly IHttpClientFactory httpClientFactory;
         private readonly HtmlParserService htmlParserService;
-        private readonly AuthentificationService authentificationService;
         private readonly DiscordSocketClient client;
         private readonly ConfigService configService;
         //Schlüssel ist die Discord ID, Wert ist der HTW Username
         private readonly string path = "verifiedUsers.json";
         private Dictionary<ulong, string> verifiedUsers = new();
 
-        public HTWUserService(IHttpClientFactory httpClientFactory, HtmlParserService htmlParserService, AuthentificationService authentificationService, DiscordSocketClient client, ConfigService configService)
+        public HTWUserService(IHttpClientFactory httpClientFactory, HtmlParserService htmlParserService, DiscordSocketClient client, ConfigService configService)
         {
             this.httpClientFactory = httpClientFactory;
             this.htmlParserService = htmlParserService;
-            this.authentificationService = authentificationService;
             this.client = client;
             this.configService = configService;
         }
@@ -31,35 +29,26 @@ namespace HTWDiscordBot.Services.HTW
         }
 
         //Prüft ob einem Discord User der HTW Account wirklich gehört
-        public async Task<string> IsRealUserAsync(string username, string password, ulong id)
+        public async Task<string> IsRealUserAsync(string username, string token, ulong id)
         {
             HttpClient httpClient = httpClientFactory.CreateClient("client");
 
-            Dictionary<string, string> requestContent = new()
-            {
-                { "username", username },
-                { "password", password },
-            };
-            string authCookie = await authentificationService.GetAuthCookieAsync(requestContent);
-
-            HttpRequestMessage requestMessage = new(HttpMethod.Get, "map");
-            requestMessage.Headers.Add("Cookie", $"connect.sid={authCookie}");
+            HttpRequestMessage requestMessage = new(HttpMethod.Get, $"verify/{username}/{token}");
             HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage);
 
-            //Der gefundene Username
-            string? scrapedUsername = htmlParserService.ParseUsername(await responseMessage.Content.ReadAsStringAsync());
+            string? response = await responseMessage.Content.ReadAsStringAsync();
 
-            if (scrapedUsername == null)
-                return "Login unsuccessful";
+            if (response == null || response == "not valid")
+                return "Login war nicht erfolgreich. Bitte überprüfe Benutzername und Token und versuche es erneut";
 
             if (verifiedUsers.ContainsKey(id))
-                verifiedUsers[id] = scrapedUsername;
+                verifiedUsers[id] = username;
             else
-                verifiedUsers.Add(id, scrapedUsername);
+                verifiedUsers.Add(id, username);
 
             await WriteDictionaryAsync(verifiedUsers);
             await UpdateNicknames();
-            return $"Login successful, {scrapedUsername}";
+            return $"Login erfolgreich, {username}";
         }
 
         //Updatet die Nicknames aller Discord User die sich mit dem HTW Account verifiziert haben

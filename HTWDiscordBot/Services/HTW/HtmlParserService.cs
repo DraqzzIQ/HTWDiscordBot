@@ -6,7 +6,6 @@ namespace HTWDiscordBot.Services
     public class HtmlParserService
     {
         private readonly string scoreboardPath = "/html/body/div/table/tbody";
-        private readonly string usernamePath = "/html/body/div[1]/p/strong[1]";
 
         public HtmlParserService()
         {
@@ -21,25 +20,12 @@ namespace HTWDiscordBot.Services
             foreach (HtmlNode player in document.DocumentNode.SelectSingleNode(scoreboardPath).Descendants("tr").Take(50))
             {
                 List<HtmlNode> playerData = player.Descendants("td").ToList();
-                
+
                 codeblock += $"{playerData[0].InnerText.PadRight(2)}\t {playerData[2].InnerText}\t  {playerData[1].InnerText}\n";
             }
 
             codeblock += "```";
             return codeblock;
-        }
-
-        //Versucht einen Username aus der HTML-Datei zu parsen
-        public string? ParseUsername(string html)
-        {
-            HtmlDocument document = LoadHtml(html);
-
-            HtmlNode username = document.DocumentNode.SelectSingleNode(usernamePath);
-
-            if (username == null)
-                return null;
-
-            return username.InnerText;
         }
 
         //Extrahiert einen bestimmten Eintrag aus dem Scoreboard

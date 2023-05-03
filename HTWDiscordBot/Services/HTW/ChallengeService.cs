@@ -1,6 +1,6 @@
-using System.Net;
 using Discord;
 using Discord.WebSocket;
+using System.Net;
 
 namespace HTWDiscordBot.Services.HTW
 {
@@ -10,16 +10,14 @@ namespace HTWDiscordBot.Services.HTW
         private readonly DiscordSocketClient client;
         private readonly IHttpClientFactory httpClientFactory;
         private readonly AuthentificationService authentificationService;
-        private readonly ConfigService configService;
         private readonly LoggingService loggingService;
         private readonly string path = "challengeID.txt";
 
-        public ChallengeService(DiscordSocketClient client, IHttpClientFactory httpClientFactory, AuthentificationService authentificationService, ConfigService configService, LoggingService loggingService)
+        public ChallengeService(DiscordSocketClient client, IHttpClientFactory httpClientFactory, AuthentificationService authentificationService, LoggingService loggingService)
         {
             this.client = client;
             this.httpClientFactory = httpClientFactory;
             this.authentificationService = authentificationService;
-            this.configService = configService;
             this.loggingService = loggingService;
         }
 
