@@ -23,8 +23,6 @@ namespace HTWDiscordBot.Services.HTW
         //Updated das Scoreboard
         public async Task UpdateScoreboardAsync(ulong textChannelID)
         {
-            HttpClient httpClient = httpClientFactory.CreateClient("client");
-
             SocketTextChannel? textChannel = await client.GetChannelAsync(textChannelID) as SocketTextChannel;
 
             if (textChannel == null)
@@ -63,15 +61,15 @@ namespace HTWDiscordBot.Services.HTW
             HttpRequestMessage requestMessage = new(HttpMethod.Get, "highscore");
             HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage);
 
-            string playerData = "**" + String.Format("{0,-6} {1,-9} {2,-40}", "Platz", "Punktzahl", "Benutzername").Replace(" ", "᲼") + "**";
+            string codeblock = $"```ansi\n\u001b[1;32mPlatz  Punktzahl Benutzername\u001b[0m\n";
 
             List<HtmlNode>? scoreboardEntry = htmlParserService.GetScoreBoardEntry(await responseMessage.Content.ReadAsStringAsync(), username);
 
             if (scoreboardEntry != null)
             {
-                playerData += String.Format("\n{0,-5} {1,-9} {2,-40}", scoreboardEntry[0].InnerText, scoreboardEntry[2].InnerText, scoreboardEntry[1].InnerText).Replace(" ", "᲼");
-
-                return CreateScoreboardEmbed(playerData);
+                codeblock += $"{scoreboardEntry[0].InnerText.PadRight(2)}\t {scoreboardEntry[2].InnerText}\t  {scoreboardEntry[1].InnerText}\n";
+                codeblock += "```";
+                return CreateScoreboardEmbed(codeblock);
             }
             else
                 return null;
