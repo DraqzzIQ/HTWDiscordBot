@@ -1,7 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using HtmlAgilityPack;
-using System.Text.Json;
+using Newtonsoft.Json;
 
 namespace HTWDiscordBot.Services.HTW
 {
@@ -90,7 +90,7 @@ namespace HTWDiscordBot.Services.HTW
         //Schreibt das Dictionary mit den Accounts
         private async Task WriteDictionaryAsync(Dictionary<ulong, string> dict)
         {
-            await File.WriteAllTextAsync(path, JsonSerializer.Serialize(dict));
+            await File.WriteAllTextAsync(path, JsonConvert.SerializeObject(dict, formatting: Formatting.Indented));
         }
 
         //Liest das Dictionary mit den Accounts
@@ -100,7 +100,7 @@ namespace HTWDiscordBot.Services.HTW
             {
                 await WriteDictionaryAsync(new Dictionary<ulong, string>());
             }
-            Dictionary<ulong, string>? dict = await JsonSerializer.DeserializeAsync<Dictionary<ulong, string>>(File.OpenRead(path));
+            Dictionary<ulong, string>? dict = JsonConvert.DeserializeObject<Dictionary<ulong, string>>(await File.ReadAllTextAsync(path));
 
             if (dict == null)
                 return new Dictionary<ulong, string>();

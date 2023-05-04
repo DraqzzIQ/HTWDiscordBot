@@ -1,4 +1,4 @@
-﻿using Discord;
+﻿using Newtonsoft.Json;
 
 namespace HTWDiscordBot.Services
 {
@@ -7,42 +7,37 @@ namespace HTWDiscordBot.Services
     {
         public readonly Config Config;
 
-        public ConfigService(LoggingService loggingService, string path = ".env")
+        public ConfigService(string path = "config.json")
         {
             if (!File.Exists(path))
             {
-                File.Create(path);
+                File.WriteAllText(path, JsonConvert.SerializeObject(new Config(), formatting: Formatting.Indented));
                 Console.WriteLine($"New {path} file generated. Please configure and restart");
                 Environment.Exit(-1);
             }
-            //1. Zeile Username
-            //2. Zeile Password
-            //3. Zeile Discord Bot Token
-            //4. Zeile Scoreboard Channel ID
-            //5. Zeile Challenge Channel ID
-            //6. Zeile Server ID
-            string[] content = File.ReadAllLines(path);
 
-            if (content.Length < 6)
-            {
-                loggingService.Log(new(LogSeverity.Error, "Config", "Kofigurationsdatei nicht vollständig"));
-                Environment.Exit(-1);
-            }
-
-            Config = new(content[0].Trim(), content[1].Trim(), content[2].Trim(), ulong.Parse(content[3].Trim()), ulong.Parse(content[4].Trim()), ulong.Parse(content[5].Trim()));
+            Config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(path));
         }
     }
 
     public class Config
     {
-        public readonly string Username;
-        public readonly string Password;
-        public readonly string Token;
-        public readonly ulong ScoreboardChannelID;
-        public readonly ulong ChallengeChannelID;
-        public readonly ulong ServerID;
+        [JsonRequired]
+        public string Username { get; }
+        [JsonRequired]
+        public string Password { get; }
+        [JsonRequired]
+        public string Token { get; }
+        [JsonRequired]
+        public ulong ScoreboardChannelID { get; }
+        [JsonRequired]
+        public ulong ChallengeChannelID { get; }
+        [JsonRequired]
+        public ulong ServerID { get; }
+
         public const string Url = "https://hack.arrrg.de/";
 
+        [JsonConstructor]
         public Config(string username, string password, string token, ulong scoreboardChannelID, ulong challengeChannelID, ulong serverID)
         {
             Username = username;
@@ -52,5 +47,6 @@ namespace HTWDiscordBot.Services
             ChallengeChannelID = challengeChannelID;
             ServerID = serverID;
         }
+        public Config() { }
     }
 }
