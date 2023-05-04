@@ -33,19 +33,25 @@ namespace HTWDiscordBot.Services
         [JsonRequired]
         public ulong ChallengeChannelID { get; }
         [JsonRequired]
+        public ulong RoleChannelID { get; }
+        [JsonRequired]
+        public ulong RoleID { get; }
+        [JsonRequired]
         public ulong ServerID { get; }
 
         public const string Url = "https://hack.arrrg.de/";
 
         [JsonConstructor]
-        public Config(string username, string password, string token, ulong scoreboardChannelID, ulong challengeChannelID, ulong serverID)
+        public Config(string username, string password, string token, ulong scoreboardChannelID, ulong challengeChannelID, ulong roleChannelID, ulong roleID, ulong serverID)
         {
             Username = username;
             Password = password;
             Token = token;
             ScoreboardChannelID = scoreboardChannelID;
             ChallengeChannelID = challengeChannelID;
+            RoleChannelID = roleChannelID;
             ServerID = serverID;
+            RoleID = roleID;
         }
         public Config() { }
     }

@@ -11,14 +11,16 @@ namespace HTWDiscordBot.Services.HTW
         private readonly IHttpClientFactory httpClientFactory;
         private readonly AuthentificationService authentificationService;
         private readonly LoggingService loggingService;
+        private readonly ConfigService configService;
         private readonly string path = "challengeID.txt";
 
-        public ChallengeService(DiscordSocketClient client, IHttpClientFactory httpClientFactory, AuthentificationService authentificationService, LoggingService loggingService)
+        public ChallengeService(DiscordSocketClient client, IHttpClientFactory httpClientFactory, AuthentificationService authentificationService, LoggingService loggingService, ConfigService configService)
         {
             this.client = client;
             this.httpClientFactory = httpClientFactory;
             this.authentificationService = authentificationService;
             this.loggingService = loggingService;
+            this.configService = configService;
         }
 
         //Überprüft ob neue Aufgaben vorhanden sind
@@ -58,7 +60,7 @@ namespace HTWDiscordBot.Services.HTW
                 return;
             }
 
-            await textChannel.SendMessageAsync($"@everyone Neue Aufgabe: {url}");
+            await textChannel.SendMessageAsync($"{MentionUtils.MentionRole(configService.Config.RoleID)} Neue Aufgabe: {url}");
         }
 
         //Liest die Challenge ID aus challengeID.txt

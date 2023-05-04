@@ -16,6 +16,7 @@ namespace HTWDiscordBot
         private readonly HTWService htwService;
         private readonly InteractionHandler interactionHandler;
         private readonly HTWUserService userService;
+        private readonly RoleService roleService;
 
         public Program()
         {
@@ -26,6 +27,7 @@ namespace HTWDiscordBot
             htwService = services.GetRequiredService<HTWService>();
             interactionHandler = services.GetRequiredService<InteractionHandler>();
             userService = services.GetRequiredService<HTWUserService>();
+            roleService = services.GetRequiredService<RoleService>();
         }
 
         public static Task Main() => new Program().MainAsync();
@@ -46,6 +48,7 @@ namespace HTWDiscordBot
         private async Task Client_ReadyAsync()
         {
             await htwService.InitializeAsync();
+            await roleService.InitializeAsync();
         }
 
         //ServiceProvider für Dependency Injection
@@ -64,7 +67,8 @@ namespace HTWDiscordBot
                 .AddSingleton<ChallengeService>()
                 .AddSingleton<HtmlParserService>()
                 .AddSingleton<InteractionHandler>()
-                .AddSingleton<HTWUserService>();
+                .AddSingleton<HTWUserService>()
+                .AddSingleton<RoleService>();
             collection.AddHttpClient("client", httpClient =>
             {
                 httpClient.BaseAddress = new Uri(Config.Url);

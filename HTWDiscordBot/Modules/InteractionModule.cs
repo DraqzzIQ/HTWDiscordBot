@@ -5,11 +5,11 @@ namespace HTWDiscordBot.Modules
 {
     //WIP
     //Muss public sein, um vom InteractionHandler erkannt zu werden
-    public class ModalModule : InteractionModuleBase<SocketInteractionContext>
+    public class InteractionModule : InteractionModuleBase<SocketInteractionContext>
     {
         private readonly HTWUserService verifyUserService;
 
-        public ModalModule(HTWUserService verifyUserService)
+        public InteractionModule(HTWUserService verifyUserService)
         {
             this.verifyUserService = verifyUserService;
         }
