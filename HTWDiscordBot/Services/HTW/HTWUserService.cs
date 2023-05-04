@@ -51,6 +51,21 @@ namespace HTWDiscordBot.Services.HTW
             return $"Login erfolgreich, {username}";
         }
 
+        //Loggt einen Benutzer aus
+        public async Task LogoutAsync(ulong id)
+        {
+            if (!verifiedUsers.ContainsKey(id))
+                return;
+
+            SocketGuild guild = client.GetGuild(configService.Config.ServerID);
+            SocketGuildUser? user = guild.GetUser(id);
+
+            await user.ModifyAsync(x => x.Nickname = user.Username);
+
+            verifiedUsers.Remove(id);
+            await WriteDictionaryAsync(verifiedUsers);
+        }
+
         //Updatet die Nicknames aller Discord User die sich mit dem HTW Account verifiziert haben
         public async Task UpdateNicknames()
         {

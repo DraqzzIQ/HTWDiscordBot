@@ -8,14 +8,16 @@ namespace HTWDiscordBot.Modules
     public class SlashCommandModule : InteractionModuleBase<SocketInteractionContext>
     {
         private readonly ScoreboardService scoreboardService;
+        private readonly HTWUserService verifyUserService;
 
-        public SlashCommandModule(ScoreboardService scoreboardService)
+        public SlashCommandModule(ScoreboardService scoreboardService, HTWUserService verifyUserService)
         {
             this.scoreboardService = scoreboardService;
+            this.verifyUserService = verifyUserService;
         }
 
         //Gibt ein Modal zurück mit dem man sich einloggen kann
-        [SlashCommand("login", "Logge dich ein, damit dein Rank angezeigt wird. Keine Anmeldedaten werden gespeichert.")]
+        [SlashCommand("login", "Logge dich ein, damit dein Rank neben deinem Benutzernamen angezeigt wird.")]
         public async Task Login()
         {
             ComponentBuilder componentBuilder = new ComponentBuilder()
@@ -23,6 +25,13 @@ namespace HTWDiscordBot.Modules
                 .WithButton(label: "Login", customId: "login-button", style: ButtonStyle.Primary, row: 1);
 
             await RespondAsync("Öffne den Link, kopiere den Token und drücke auf **Login** um deinen HTW Account zu verknüpfen", components: componentBuilder.Build(), ephemeral: true);
+        }
+
+        [SlashCommand("logout", "Dein Rank wird nicht mehr neben deinem Benutzernamen angezeigt")]
+        public async Task Playerdata()
+        {
+            await verifyUserService.LogoutAsync(Context.User.Id);
+            await RespondAsync("Ausloggen erfolgreich.", ephemeral: true);
         }
 
         [SlashCommand("player", "Zeigt den Platz auf dem Scoreboard und punkte eines Spielers an")]
