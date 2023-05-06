@@ -37,10 +37,17 @@ namespace HTWDiscordBot.Services
         {
             while (true)
             {
-                await challengeService.CheckForNewChallengeAsync(requestContent, configService.Config.ChallengeChannelID);
-                await scoreboardService.UpdateScoreboardAsync(configService.Config.ScoreboardChannelID);
-                await htwUserService.UpdateNicknames();
-                await Task.Delay(delayInSeconds * 1000);
+                try
+                {
+                    await challengeService.CheckForNewChallengeAsync(requestContent, configService.Config.ChallengeChannelID);
+                    await scoreboardService.UpdateScoreboardAsync(configService.Config.ScoreboardChannelID);
+                    await htwUserService.UpdateNicknames();
+                    await Task.Delay(delayInSeconds * 1000);
+                }
+                catch (Exception e)
+                {
+                    loggingService.Log(new(LogSeverity.Critical, "HTWService Loop", e.ToString()));
+                }
             }
         }
     }
