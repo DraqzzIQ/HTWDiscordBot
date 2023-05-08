@@ -33,10 +33,16 @@ namespace HTWDiscordBot.Services
             DiscordSocketConfig discordSocketConfig = new()
             {
                 GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers | GatewayIntents.GuildPresences,
-                LogGatewayIntentWarnings = false
+                LogGatewayIntentWarnings = false,
+                DefaultRatelimitCallback = info => RatelimitCallback(info)
             };
 
             return discordSocketConfig;
+        }
+
+        private static async Task RatelimitCallback(IRateLimitInfo info)
+        {
+            Console.WriteLine($"[RateLimit/{LogSeverity.Info}] Global: {info.IsGlobal}, Limit: {info.Limit}, Remaining: {info.Remaining}, RetryAfter: {info.RetryAfter}, ResetsAfter: {info.ResetAfter?.TotalSeconds}, Lag: {info.Lag?.TotalMilliseconds}");
         }
     }
 }

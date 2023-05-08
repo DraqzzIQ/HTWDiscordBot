@@ -29,6 +29,7 @@ namespace HTWDiscordBot.Services
             requestContent.Add("password", configService.Config.Password);
 
             Task.Run(() => LoopAsync()).ContinueWith(t => loggingService.Log(new(LogSeverity.Critical, "HTWService Loop", t.Exception?.ToString())));
+            Task.Run(() => NicknameLoopAsync()).ContinueWith(t => loggingService.Log(new(LogSeverity.Critical, "HTWService NicknameLoop", t.Exception?.ToString())));
             return Task.CompletedTask;
         }
 
@@ -41,12 +42,26 @@ namespace HTWDiscordBot.Services
                 {
                     await challengeService.CheckForNewChallengeAsync(requestContent, configService.Config.ChallengeChannelID);
                     await scoreboardService.UpdateScoreboardAsync(configService.Config.ScoreboardChannelID);
-                    await htwUserService.UpdateNicknames();
                     await Task.Delay(delayInSeconds * 1000);
                 }
                 catch (Exception e)
                 {
                     loggingService.Log(new(LogSeverity.Critical, "HTWService Loop", e.ToString()));
+                }
+            }
+        }
+
+        private async Task NicknameLoopAsync()
+        {
+            while (true)
+            {
+                try
+                {
+                    await htwUserService.UpdateNicknames();
+                }
+                catch (Exception e)
+                {
+                    loggingService.Log(new(LogSeverity.Critical, "HTWService NicknameLoop", e.ToString()));
                 }
             }
         }

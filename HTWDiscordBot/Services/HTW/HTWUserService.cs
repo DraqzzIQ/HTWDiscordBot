@@ -99,6 +99,7 @@ namespace HTWDiscordBot.Services.HTW
                     continue;
                 }
                 await user.ModifyAsync(x => x.Nickname = $"{user.Username} #{playerData[0].InnerText}");
+                await Task.Delay(1000); //Discord API Rate Limiter wird sonst sauer
             }
         }
 
