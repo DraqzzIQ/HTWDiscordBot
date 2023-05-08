@@ -42,7 +42,8 @@ namespace HTWDiscordBot.Services
 
         private static async Task RatelimitCallback(IRateLimitInfo info)
         {
-            Console.WriteLine($"[RateLimit/{LogSeverity.Info}] Global: {info.IsGlobal}, Limit: {info.Limit}, Remaining: {info.Remaining}, RetryAfter: {info.RetryAfter}, ResetsAfter: {info.ResetAfter?.TotalSeconds}, Lag: {info.Lag?.TotalMilliseconds}");
+            if (info.Remaining < 1)
+                Console.WriteLine($"[RateLimit/{LogSeverity.Warning}] Global: {info.IsGlobal}, Limit: {info.Limit}, Remaining: {info.Remaining}, RetryAfter: {info.RetryAfter}, ResetsAfter: {info.ResetAfter?.TotalSeconds}, Lag: {info.Lag?.TotalMilliseconds}");
         }
     }
 }
