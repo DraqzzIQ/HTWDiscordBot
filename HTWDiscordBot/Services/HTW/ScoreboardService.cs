@@ -57,6 +57,7 @@ namespace HTWDiscordBot.Services.HTW
         //Sucht einen Scoreboard Eintrag anhand des Benutzernamens
         public async Task<ScoreboardEntryModel?> GetScoreboardEntryAsync(string username)
         {
+            Scoreboard ??= await GetScoreboardAsync();
             return Scoreboard?.Where(entry => entry.Name.Equals(username, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
         }
 

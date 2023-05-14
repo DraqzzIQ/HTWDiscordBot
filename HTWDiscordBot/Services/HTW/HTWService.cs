@@ -49,6 +49,7 @@ namespace HTWDiscordBot.Services
 
         private async Task NicknameLoopAsync()
         {
+            await Task.Delay(delayInSeconds * 1000);
             while (true)
             {
                 try
