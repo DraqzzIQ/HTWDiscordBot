@@ -28,7 +28,7 @@ namespace HTWDiscordBot.Modules
         }
 
         [SlashCommand("logout", "Dein Rank wird nicht mehr neben deinem Benutzernamen angezeigt")]
-        public async Task Playerdata()
+        public async Task Logout()
         {
             await verifyUserService.LogoutAsync(Context.User.Id);
             await RespondAsync("Ausloggen erfolgreich.", ephemeral: true);

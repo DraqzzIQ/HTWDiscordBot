@@ -1,6 +1,7 @@
 using Discord;
 using Discord.WebSocket;
-using System.Net;
+using HTWDiscordBot.Models;
+using Newtonsoft.Json;
 
 namespace HTWDiscordBot.Services.HTW
 {
@@ -9,48 +10,58 @@ namespace HTWDiscordBot.Services.HTW
     {
         private readonly DiscordSocketClient client;
         private readonly IHttpClientFactory httpClientFactory;
-        private readonly AuthentificationService authentificationService;
         private readonly LoggingService loggingService;
         private readonly ConfigService configService;
-        private readonly string path = "challengeID.txt";
+        private readonly string path = "challengeMap.json";
 
-        public ChallengeService(DiscordSocketClient client, IHttpClientFactory httpClientFactory, AuthentificationService authentificationService, LoggingService loggingService, ConfigService configService)
+
+        public ChallengeService(DiscordSocketClient client, IHttpClientFactory httpClientFactory, LoggingService loggingService, ConfigService configService)
         {
             this.client = client;
             this.httpClientFactory = httpClientFactory;
-            this.authentificationService = authentificationService;
             this.loggingService = loggingService;
             this.configService = configService;
         }
 
         //Überprüft ob neue Aufgaben vorhanden sind
-        public async Task CheckForNewChallengeAsync(Dictionary<string, string> requestContent, ulong textChannelID)
+        public async Task CheckForNewChallengeAsync(ulong textChannelID)
         {
-            HttpClient httpClient = httpClientFactory.CreateClient("client");
+            List<ChallengeModel> oldChallengeMap = await ReadChallengeMapAsync(path);
+            List<ChallengeModel>? newChallengeMap = await GetChallengeMapAsync();
 
-            string authCookie = await authentificationService.GetAuthCookieAsync(requestContent);
-            int challengeID = await ReadChallengeIDAsync();
-
-            //Checkt ob neue Aufgabe vorhanden ist
-            HttpRequestMessage requestMessage = new(HttpMethod.Get, $"challenge/{challengeID}");
-            requestMessage.Headers.Add("Cookie", $"connect.sid={authCookie}");
-            HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage);
-
-            //Wenn neue Aufgabe vorhanden ist, lädt die Seite (HttpStatusCode.OK)
-            if (responseMessage.StatusCode == HttpStatusCode.OK)
+            if (newChallengeMap == null)
             {
-                Console.WriteLine("New challenge available");
-                await WriteChallengeIDAsync(challengeID + 1);
-                await UpdateChallengeAsync($"{Config.Url}challenge/{challengeID}", textChannelID);
+                await loggingService.LogAsync(new(LogSeverity.Error, "ChallengeService", "ChallengeMap konnte nicht geladen werden!"));
+                return;
             }
-            //Wenn keine neue Aufgabe vorhanden ist, wird man auf die Startseite weitergeleitet (HttpStatusCode.Redirect)
-            else if (responseMessage.StatusCode == HttpStatusCode.Redirect)
+
+            List<ChallengeModel> diff = await GetChallengeDiffAsync(oldChallengeMap, newChallengeMap);
+
+            //Wenn neue Aufgabe vorhanden ist
+            if (diff.Count > 0)
             {
+                await WriteChallengeMapAsync(newChallengeMap, path);
+                await NotifyNewChallengesAsync(diff, textChannelID);
             }
         }
 
-        //Benachrichtigt alle Discord Server auf denen der Bot sich befindet, dass es eine neue Aufgabe gibt
-        private async Task UpdateChallengeAsync(string url, ulong textChannelID)
+
+        private async Task<List<ChallengeModel>?> GetChallengeMapAsync()
+        {
+            HttpClient httpClient = httpClientFactory.CreateClient("client");
+
+            HttpRequestMessage requestMessage = new(HttpMethod.Get, "api/map");
+            HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage);
+
+            List<int>? ids = JsonConvert.DeserializeObject<List<int>>(await responseMessage.Content.ReadAsStringAsync());
+            if (ids == null || ids.Count < 1)
+                return null;
+
+            return ids.Select(id => new ChallengeModel() { ID = id }).ToList();
+        }
+
+        //Benachrichtigt User darüber, dass es eine neue Aufgabe gibt
+        private async Task NotifyNewChallengesAsync(List<ChallengeModel> challenges, ulong textChannelID)
         {
             SocketTextChannel? textChannel = await client.GetChannelAsync(textChannelID) as SocketTextChannel;
 
@@ -60,30 +71,53 @@ namespace HTWDiscordBot.Services.HTW
                 return;
             }
 
-            await textChannel.SendMessageAsync($"{MentionUtils.MentionRole(configService.Config.RoleID)} Neue Aufgabe: {url}");
+            string message = $"{MentionUtils.MentionRole(configService.Config.RoleID)} Neue Aufgaben:\n";
+            foreach (ChallengeModel challenge in challenges.TakeLast(20))
+            {
+                message += $"{challenge.URL}\n";
+                await loggingService.LogAsync(new(LogSeverity.Info, "ChallengeService", $"New challenge available: {challenge.URL}"));
+            }
+            await textChannel.SendMessageAsync(message);
         }
 
-        //Liest die Challenge ID aus challengeID.txt
-        private async Task<int> ReadChallengeIDAsync()
+        private async Task<List<ChallengeModel>> GetChallengeDiffAsync(List<ChallengeModel> oldMap, List<ChallengeModel> newMap)
         {
-            //1. Zeile ChallengeID z.B. 69
-            if (!File.Exists(path))
+            List<ChallengeModel> diff = new();
+
+            foreach (ChallengeModel challenge in newMap)
             {
-                File.Create(path);
-                Console.WriteLine($"New {path} file generated. Please configure and restart");
-                Environment.Exit(-1);
+                if (!oldMap.Any(oldChallenge => oldChallenge.ID == challenge.ID))
+                    diff.Add(challenge);
             }
 
-            string id = await File.ReadAllTextAsync(path);
-            int challengeID = int.Parse(id.Trim());
-
-            return challengeID;
+            return diff;
         }
 
-        //Schreibt die Challenge ID in die challengeID.txt
-        private async Task WriteChallengeIDAsync(int challengeID)
+        //Liest die ChallengeMap aus einer Textdatei
+        private async Task<List<ChallengeModel>> ReadChallengeMapAsync(string path)
         {
-            await File.WriteAllTextAsync(path, challengeID.ToString());
+            List<ChallengeModel>? challengeMap;
+            if (!File.Exists(path))
+            {
+                challengeMap = await GetChallengeMapAsync();
+                await WriteChallengeMapAsync(challengeMap, path);
+                Console.WriteLine($"New {path} file generated.");
+
+                if (challengeMap == null)
+                    return new List<ChallengeModel>();
+                return challengeMap;
+            }
+
+            challengeMap = JsonConvert.DeserializeObject<List<ChallengeModel>>(await File.ReadAllTextAsync(path));
+            if (challengeMap == null)
+                return new List<ChallengeModel>();
+            return challengeMap;
+        }
+
+        //Schreibt die ChallengeMap in einer Textdatei
+        private async Task WriteChallengeMapAsync(List<ChallengeModel>? challengeMap, string path)
+        {
+            await File.WriteAllTextAsync(path, JsonConvert.SerializeObject(challengeMap, Formatting.Indented));
         }
     }
 }

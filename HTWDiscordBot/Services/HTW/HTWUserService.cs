@@ -1,6 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using HtmlAgilityPack;
+using HTWDiscordBot.Models;
 using Newtonsoft.Json;
 
 namespace HTWDiscordBot.Services.HTW
@@ -8,17 +8,17 @@ namespace HTWDiscordBot.Services.HTW
     public class HTWUserService
     {
         private readonly IHttpClientFactory httpClientFactory;
-        private readonly HtmlParserService htmlParserService;
         private readonly DiscordSocketClient client;
         private readonly ConfigService configService;
+        private readonly ScoreboardService scoreboardService;
         //Schlüssel ist die Discord ID, Wert ist der HTW Username
         private readonly string path = "verifiedUsers.json";
         private Dictionary<ulong, string> verifiedUsers = new();
 
-        public HTWUserService(IHttpClientFactory httpClientFactory, HtmlParserService htmlParserService, DiscordSocketClient client, ConfigService configService)
+        public HTWUserService(IHttpClientFactory httpClientFactory, DiscordSocketClient client, ConfigService configService, ScoreboardService scoreboardService)
         {
             this.httpClientFactory = httpClientFactory;
-            this.htmlParserService = htmlParserService;
+            this.scoreboardService = scoreboardService;
             this.client = client;
             this.configService = configService;
         }
@@ -83,7 +83,7 @@ namespace HTWDiscordBot.Services.HTW
                 KeyValuePair<ulong, string> pair = pairs[i];
 
                 SocketGuildUser? user = guild.GetUser(pair.Key);
-                List<HtmlNode>? playerData = htmlParserService.GetScoreBoardEntry(html, pair.Value);
+                ScoreboardEntryModel? playerData = await scoreboardService.GetScoreboardEntryAsync(pair.Value);
                 if (user == null || playerData == null)
                 {
                     verifiedUsers.Remove(pair.Key);
@@ -98,7 +98,7 @@ namespace HTWDiscordBot.Services.HTW
                     await WriteDictionaryAsync(verifiedUsers);
                     continue;
                 }
-                await user.ModifyAsync(x => x.Nickname = $"{user.Username} #{playerData[0].InnerText}");
+                await user.ModifyAsync(x => x.Nickname = $"{user.Username} #{playerData.Rank}");
                 await Task.Delay(1000); //Discord API Rate Limiter wird sonst sauer
             }
         }

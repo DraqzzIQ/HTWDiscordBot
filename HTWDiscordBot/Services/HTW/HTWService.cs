@@ -11,7 +11,6 @@ namespace HTWDiscordBot.Services
         private readonly ChallengeService challengeService;
         private readonly HTWUserService htwUserService;
         private readonly LoggingService loggingService;
-        private readonly Dictionary<string, string> requestContent = new();
         private readonly int delayInSeconds = 30;
 
         public HTWService(ConfigService configService, ScoreboardService scoreboardService, ChallengeService challengeService, HTWUserService htwUserService, LoggingService loggingService)
@@ -25,9 +24,6 @@ namespace HTWDiscordBot.Services
 
         public Task InitializeAsync()
         {
-            requestContent.Add("username", configService.Config.Username);
-            requestContent.Add("password", configService.Config.Password);
-
             Task.Run(() => LoopAsync()).ContinueWith(t => loggingService.Log(new(LogSeverity.Critical, "HTWService Loop", t.Exception?.ToString())));
             Task.Run(() => NicknameLoopAsync()).ContinueWith(t => loggingService.Log(new(LogSeverity.Critical, "HTWService NicknameLoop", t.Exception?.ToString())));
             return Task.CompletedTask;
@@ -40,7 +36,7 @@ namespace HTWDiscordBot.Services
             {
                 try
                 {
-                    await challengeService.CheckForNewChallengeAsync(requestContent, configService.Config.ChallengeChannelID);
+                    await challengeService.CheckForNewChallengeAsync(configService.Config.ChallengeChannelID);
                     await scoreboardService.UpdateScoreboardAsync(configService.Config.ScoreboardChannelID);
                     await Task.Delay(delayInSeconds * 1000);
                 }

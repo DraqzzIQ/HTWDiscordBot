@@ -62,10 +62,8 @@ namespace HTWDiscordBot
                 .AddSingleton<DiscordService>()
                 .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
                 .AddSingleton<HTWService>()
-                .AddSingleton<AuthentificationService>()
                 .AddSingleton<ScoreboardService>()
                 .AddSingleton<ChallengeService>()
-                .AddSingleton<HtmlParserService>()
                 .AddSingleton<InteractionHandler>()
                 .AddSingleton<HTWUserService>()
                 .AddSingleton<RoleService>();
