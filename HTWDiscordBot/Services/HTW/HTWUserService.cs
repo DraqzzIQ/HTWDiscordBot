@@ -81,6 +81,7 @@ namespace HTWDiscordBot.Services.HTW
             for (int i = 0; i < verifiedUsers.Count; i++)
             {
                 KeyValuePair<ulong, string> pair = pairs[i];
+                if (!verifiedUsers.ContainsKey(pair.Key)) continue; //Falls sich der User ausgeloggt hat 
 
                 SocketGuildUser? user = guild.GetUser(pair.Key);
                 ScoreboardEntryModel? playerData = await scoreboardService.GetScoreboardEntryAsync(pair.Value);
