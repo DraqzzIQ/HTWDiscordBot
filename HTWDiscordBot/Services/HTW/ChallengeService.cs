@@ -52,12 +52,21 @@ namespace HTWDiscordBot.Services.HTW
 
             HttpRequestMessage requestMessage = new(HttpMethod.Get, "api/map");
             HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage);
+            string content = await responseMessage.Content.ReadAsStringAsync();
+            try
+            {
+                List<int>? ids = JsonConvert.DeserializeObject<List<int>>(content);
+                if (ids == null || ids.Count < 1)
+                    return null;
 
-            List<int>? ids = JsonConvert.DeserializeObject<List<int>>(await responseMessage.Content.ReadAsStringAsync());
-            if (ids == null || ids.Count < 1)
+                return ids.Select(id => new ChallengeModel() { ID = id }).ToList();
+            }
+            catch (Exception ex)
+            {
+                await loggingService.LogAsync(new(LogSeverity.Error, "ChallengeService", ex.Message));
+                await loggingService.LogAsync(new(LogSeverity.Error, "ChallengeService", content));
                 return null;
-
-            return ids.Select(id => new ChallengeModel() { ID = id }).ToList();
+            }
         }
 
         //Benachrichtigt User darüber, dass es eine neue Aufgabe gibt

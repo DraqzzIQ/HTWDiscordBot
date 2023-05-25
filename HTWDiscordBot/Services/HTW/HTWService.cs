@@ -43,6 +43,7 @@ namespace HTWDiscordBot.Services
                 catch (Exception e)
                 {
                     loggingService.Log(new(LogSeverity.Critical, "HTWService Loop", e.ToString()));
+                    await Task.Delay(delayInSeconds * 1000);
                 }
             }
         }
@@ -59,6 +60,7 @@ namespace HTWDiscordBot.Services
                 catch (Exception e)
                 {
                     loggingService.Log(new(LogSeverity.Critical, "HTWService NicknameLoop", e.ToString()));
+                    await Task.Delay(delayInSeconds * 1000);
                 }
             }
         }
