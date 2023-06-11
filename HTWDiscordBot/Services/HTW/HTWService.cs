@@ -36,31 +36,29 @@ namespace HTWDiscordBot.Services
             {
                 try
                 {
+                    await Task.Delay(delayInSeconds * 1000);
                     await challengeService.CheckForNewChallengeAsync(configService.Config.ChallengeChannelID);
                     await scoreboardService.UpdateScoreboardAsync(configService.Config.ScoreboardChannelID);
-                    await Task.Delay(delayInSeconds * 1000);
                 }
                 catch (Exception e)
                 {
                     loggingService.Log(new(LogSeverity.Critical, "HTWService Loop", e.ToString()));
-                    await Task.Delay(delayInSeconds * 1000);
                 }
             }
         }
 
         private async Task NicknameLoopAsync()
         {
-            await Task.Delay(delayInSeconds * 1000);
             while (true)
             {
                 try
                 {
+                    await Task.Delay(delayInSeconds * 1100);
                     await htwUserService.UpdateNicknames();
                 }
                 catch (Exception e)
                 {
                     loggingService.Log(new(LogSeverity.Critical, "HTWService NicknameLoop", e.ToString()));
-                    await Task.Delay(delayInSeconds * 1000);
                 }
             }
         }

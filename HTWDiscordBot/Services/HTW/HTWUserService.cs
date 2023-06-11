@@ -73,6 +73,8 @@ namespace HTWDiscordBot.Services.HTW
 
             SocketGuild guild = client.GetGuild(configService.Config.ServerID);
 
+            SocketGuildUser[] socketUsers = guild.Users.ToArray();
+
             HttpRequestMessage requestMessage = new(HttpMethod.Get, "highscore");
             HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage);
             string html = await responseMessage.Content.ReadAsStringAsync();
@@ -83,7 +85,7 @@ namespace HTWDiscordBot.Services.HTW
                 KeyValuePair<ulong, string> pair = pairs[i];
                 if (!verifiedUsers.ContainsKey(pair.Key)) continue; //Falls sich der User ausgeloggt hat 
 
-                SocketGuildUser? user = guild.GetUser(pair.Key);
+                SocketGuildUser? user = socketUsers.FirstOrDefault(socketUser => socketUser.Id == pair.Key);
                 ScoreboardEntryModel? playerData = await scoreboardService.GetScoreboardEntryAsync(pair.Value);
                 if (user == null || playerData == null)
                 {
@@ -100,7 +102,7 @@ namespace HTWDiscordBot.Services.HTW
                     continue;
                 }
                 await user.ModifyAsync(x => x.Nickname = $"{user.Username} #{playerData.Rank}");
-                await Task.Delay(1000); //Discord API Rate Limiter wird sonst sauer
+                await Task.Delay(1100); //Discord API Rate Limiter wird sonst sauer
             }
         }
 
