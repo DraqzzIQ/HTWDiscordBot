@@ -17,6 +17,7 @@ namespace HTWDiscordBot
         private readonly InteractionHandler interactionHandler;
         private readonly HTWUserService userService;
         private readonly RoleService roleService;
+        private bool initialized = false;
 
         public Program()
         {
@@ -47,6 +48,10 @@ namespace HTWDiscordBot
         //Wird ausgeführt, wenn der Bot bereit ist
         private async Task Client_ReadyAsync()
         {
+            //Verhindert das die Loops mehrfach ausgeführt werden, wenn discord reconnected
+            if (initialized) return;
+            initialized = true;
+
             await htwService.InitializeAsync();
             await roleService.InitializeAsync();
         }
