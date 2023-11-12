@@ -66,6 +66,7 @@ namespace HTWDiscordBot.Services.HTW
         //Parsed das Json Scoreboard von der HTW Seite
         private async Task<List<ScoreboardEntryModel>> GetScoreboardAsync()
         {
+            loggingService.Log(new(LogSeverity.Info, "ChallengeService", "Requesting api/highscore"));
             HttpClient httpClient = httpClientFactory.CreateClient("client");
 
             HttpRequestMessage requestMessage = new(HttpMethod.Get, "api/highscore");

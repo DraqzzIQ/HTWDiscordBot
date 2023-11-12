@@ -48,6 +48,7 @@ namespace HTWDiscordBot.Services.HTW
 
         private async Task<List<ChallengeModel>?> GetChallengeMapAsync()
         {
+            loggingService.Log(new(LogSeverity.Info, "ChallengeService", "Requesting api/map"));
             HttpClient httpClient = httpClientFactory.CreateClient("client");
 
             HttpRequestMessage requestMessage = new(HttpMethod.Get, "api/map");
@@ -80,7 +81,7 @@ namespace HTWDiscordBot.Services.HTW
                 return;
             }
 
-            string message = $"{MentionUtils.MentionRole(configService.Config.RoleID)} Neue Aufgaben:\n";
+            string message = $"{MentionUtils.MentionRole(configService.Config.ActiveHackerRoleID)} Neue Aufgaben:\n";
             foreach (ChallengeModel challenge in challenges.TakeLast(20))
             {
                 message += $"{challenge.URL}\n";

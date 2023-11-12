@@ -18,6 +18,11 @@ namespace HTWDiscordBot.Services
 
             Config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(path));
         }
+
+        public void SaveConfig()
+        {
+            File.WriteAllText("config.json", JsonConvert.SerializeObject(Config, formatting: Formatting.Indented));
+        }
     }
 
     public class Config
@@ -29,23 +34,32 @@ namespace HTWDiscordBot.Services
         [JsonRequired]
         public ulong ChallengeChannelID { get; }
         [JsonRequired]
-        public ulong RoleChannelID { get; }
+        public ulong RolesChannelID { get; }
         [JsonRequired]
-        public ulong RoleID { get; }
+        public ulong ActiveHackerRoleID { get; }
+        [JsonRequired]
+        public ulong CTFRoleID { get; }
+        [JsonRequired]
+        public ulong ActiveHackerMessageID { get; set; }
+        [JsonRequired]
+        public ulong CTFMessageID { get; set; }
         [JsonRequired]
         public ulong ServerID { get; }
 
         public const string Url = "https://hack.arrrg.de/";
 
         [JsonConstructor]
-        public Config(string token, ulong scoreboardChannelID, ulong challengeChannelID, ulong roleChannelID, ulong roleID, ulong serverID)
+        public Config(string token, ulong scoreboardChannelID, ulong challengeChannelID, ulong rolesChannelID, ulong activeHackerRoleID, ulong ctfRoleID, ulong activeHackerMessageID, ulong ctfMessageID, ulong serverID)
         {
             Token = token;
             ScoreboardChannelID = scoreboardChannelID;
             ChallengeChannelID = challengeChannelID;
-            RoleChannelID = roleChannelID;
+            RolesChannelID = rolesChannelID;
             ServerID = serverID;
-            RoleID = roleID;
+            ActiveHackerRoleID = activeHackerRoleID;
+            CTFRoleID = ctfRoleID;
+            ActiveHackerMessageID = activeHackerMessageID;
+            CTFMessageID = ctfMessageID;
         }
         public Config() { }
     }
