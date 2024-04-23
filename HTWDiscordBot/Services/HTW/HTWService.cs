@@ -11,7 +11,10 @@ namespace HTWDiscordBot.Services
         private readonly ChallengeService challengeService;
         private readonly HTWUserService htwUserService;
         private readonly LoggingService loggingService;
-        private readonly int delayInSeconds = 30;
+        private readonly int challengeCheckDelayInSeconds = 30;
+        private readonly int nicknameUpdateDelayInSeconds = 5 * 60;
+        private readonly int scoreboardUpdateDelayInSeconds = 5 * 60;
+
 
         public HTWService(ConfigService configService, ScoreboardService scoreboardService, ChallengeService challengeService, HTWUserService htwUserService, LoggingService loggingService)
         {
@@ -24,36 +27,55 @@ namespace HTWDiscordBot.Services
 
         public Task InitializeAsync()
         {
-            Task.Run(() => LoopAsync()).ContinueWith(t => loggingService.Log(new(LogSeverity.Critical, "HTWService Loop", t.Exception?.ToString())));
+            Task.Run(() => ChallengeLoopAsync()).ContinueWith(t => loggingService.Log(new(LogSeverity.Critical, "HTWService ChallengeLoop", t.Exception?.ToString())));
+            Task.Run(() => ScoreboardLoopAsync()).ContinueWith(t => loggingService.Log(new(LogSeverity.Critical, "HTWService ScoreboardLoop", t.Exception?.ToString())));
             Task.Run(() => NicknameLoopAsync()).ContinueWith(t => loggingService.Log(new(LogSeverity.Critical, "HTWService NicknameLoop", t.Exception?.ToString())));
+
             return Task.CompletedTask;
         }
 
         //Läuft jede 30 Sekunden um auf neue Aufgaben zu prüfen
-        private async Task LoopAsync()
+        private async Task ChallengeLoopAsync()
         {
             while (true)
             {
                 try
                 {
-                    await Task.Delay(delayInSeconds * 1000);
+                    await Task.Delay(challengeCheckDelayInSeconds * 1000);
                     await challengeService.CheckForNewChallengeAsync(configService.Config.ChallengeChannelID);
-                    await scoreboardService.UpdateScoreboardAsync(configService.Config.ScoreboardChannelID);
                 }
                 catch (Exception e)
                 {
-                    loggingService.Log(new(LogSeverity.Critical, "HTWService Loop", e.ToString()));
+                    loggingService.Log(new(LogSeverity.Critical, "HTWService ChallengeLoop", e.ToString()));
                 }
             }
         }
 
+        // Läuft jede 5 Minuten um das Scoreboard zu aktualisieren
+        private async Task ScoreboardLoopAsync()
+        {
+            while (true)
+            {
+                try
+                {
+                    await Task.Delay(scoreboardUpdateDelayInSeconds * 1000);
+                    await scoreboardService.UpdateScoreboardAsync(configService.Config.ScoreboardChannelID);
+                }
+                catch (Exception e)
+                {
+                    loggingService.Log(new(LogSeverity.Critical, "HTWService ScoreboardLoop", e.ToString()));
+                }
+            }
+        }
+
+        // Läuft jede 5 Minuten um Nicknames zu aktualisieren
         private async Task NicknameLoopAsync()
         {
             while (true)
             {
                 try
                 {
-                    await Task.Delay(delayInSeconds * 1000);
+                    await Task.Delay(nicknameUpdateDelayInSeconds * 1000);
                     await htwUserService.UpdateNicknames();
                 }
                 catch (Exception e)
