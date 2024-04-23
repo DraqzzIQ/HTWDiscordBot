@@ -118,7 +118,14 @@ namespace HTWDiscordBot.Services.HTW
                     await WriteDictionaryAsync(verifiedUsers);
                     continue;
                 }
-                await user.ModifyAsync(x => x.Nickname = $"{user.Username} #{playerData[i].Rank}");
+
+                ScoreboardEntryModel? scoreboardEntryModel = playerData.FirstOrDefault(x => x.Name == pair.Value);
+                if (scoreboardEntryModel == null)
+                {
+                    continue;
+                }
+
+                await user.ModifyAsync(x => x.Nickname = $"{user.Username} #{scoreboardEntryModel.Rank}");
                 await Task.Delay(1000); //Discord API Rate Limiter wird sonst sauer
             }
         }
