@@ -2,6 +2,7 @@
 using Discord.WebSocket;
 using HTWDiscordBot.Models;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace HTWDiscordBot.Services.HTW
 {
@@ -11,16 +12,18 @@ namespace HTWDiscordBot.Services.HTW
         private readonly DiscordSocketClient client;
         private readonly ConfigService configService;
         private readonly ScoreboardService scoreboardService;
+        private readonly LoggingService loggingService;
         //Schlüssel ist die Discord ID, Wert ist der HTW Username
         private readonly string path = "verifiedUsers.json";
         private Dictionary<ulong, string> verifiedUsers = new();
 
-        public HTWUserService(IHttpClientFactory httpClientFactory, DiscordSocketClient client, ConfigService configService, ScoreboardService scoreboardService)
+        public HTWUserService(IHttpClientFactory httpClientFactory, DiscordSocketClient client, ConfigService configService, ScoreboardService scoreboardService, LoggingService loggingService)
         {
             this.httpClientFactory = httpClientFactory;
             this.scoreboardService = scoreboardService;
             this.client = client;
             this.configService = configService;
+            this.loggingService = loggingService;
         }
 
         public async Task InitializeAsync()
@@ -75,9 +78,24 @@ namespace HTWDiscordBot.Services.HTW
 
             SocketGuildUser[] socketUsers = guild.Users.ToArray();
 
-            HttpRequestMessage requestMessage = new(HttpMethod.Get, "highscore");
-            HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage);
-            string html = await responseMessage.Content.ReadAsStringAsync();
+            Dictionary<string, string> values = new();
+            for (int i = 0; i < verifiedUsers.Count; i++)
+            {
+                KeyValuePair<ulong, string> pair = verifiedUsers.ElementAt(i);
+                values.Add("name[" + i + "]", pair.Value);
+            }
+
+            FormUrlEncodedContent content = new(values);
+
+            HttpResponseMessage responseMessage = await httpClient.PostAsync("api/user-rankings", content);
+            string response = await responseMessage.Content.ReadAsStringAsync();
+
+            List<ScoreboardEntryModel>? playerData = JsonConvert.DeserializeObject<List<ScoreboardEntryModel>>(response);
+            if (playerData == null)
+            {
+                await loggingService.LogAsync(new(LogSeverity.Error, "HTWUserService", "playerData is null"));
+                return;
+            }
 
             KeyValuePair<ulong, string>[] pairs = verifiedUsers.ToArray();
             for (int i = 0; i < verifiedUsers.Count; i++)
@@ -86,8 +104,7 @@ namespace HTWDiscordBot.Services.HTW
                 if (!verifiedUsers.ContainsKey(pair.Key)) continue; //Falls sich der User ausgeloggt hat 
 
                 SocketGuildUser? user = socketUsers.FirstOrDefault(socketUser => socketUser.Id == pair.Key);
-                ScoreboardEntryModel? playerData = await scoreboardService.GetScoreboardEntryAsync(pair.Value);
-                if (user == null || playerData == null)
+                if (user == null)
                 {
                     verifiedUsers.Remove(pair.Key);
                     await WriteDictionaryAsync(verifiedUsers);
@@ -101,7 +118,7 @@ namespace HTWDiscordBot.Services.HTW
                     await WriteDictionaryAsync(verifiedUsers);
                     continue;
                 }
-                await user.ModifyAsync(x => x.Nickname = $"{user.Username} #{playerData.Rank}");
+                await user.ModifyAsync(x => x.Nickname = $"{user.Username} #{playerData[i].Rank}");
                 await Task.Delay(1000); //Discord API Rate Limiter wird sonst sauer
             }
         }

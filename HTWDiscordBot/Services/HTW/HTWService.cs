@@ -53,6 +53,7 @@ namespace HTWDiscordBot.Services
             {
                 try
                 {
+                    await Task.Delay(delayInSeconds * 1000);
                     await htwUserService.UpdateNicknames();
                 }
                 catch (Exception e)

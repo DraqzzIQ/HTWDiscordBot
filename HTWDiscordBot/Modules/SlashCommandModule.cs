@@ -39,8 +39,10 @@ namespace HTWDiscordBot.Modules
         {
             await DeferAsync();
 
-            if (await scoreboardService.GetPlayerdataAsync(username) != null)
-                await Context.Interaction.FollowupAsync(embed: await scoreboardService.GetPlayerdataAsync(username));
+            Embed? embed = await scoreboardService.GetPlayerdataAsync(username);
+
+            if (embed != null)
+                await Context.Interaction.FollowupAsync(embed: embed);
             else
                 await Context.Interaction.FollowupAsync("Username wurde nicht gefunden");
         }

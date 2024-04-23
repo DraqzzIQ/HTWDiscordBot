@@ -46,30 +46,36 @@ namespace HTWDiscordBot.Services.HTW
         //Gibt den Scoreboard Eintrag eines Spielers zurück oder null, wenn der Spieler nicht im Scoreboard ist
         public async Task<Embed?> GetPlayerdataAsync(string username)
         {
-            ScoreboardEntryModel? scoreboardEntry = await GetScoreboardEntryAsync(username);
+            HttpClient httpClient = httpClientFactory.CreateClient("client");
 
-            if (scoreboardEntry == null)
+            Dictionary<string, string> values = new()
+            {
+                { "name[0]", username }
+            };
+
+            FormUrlEncodedContent content = new(values);
+
+            HttpResponseMessage responseMessage = await httpClient.PostAsync("api/user-rankings", content);
+            string response = await responseMessage.Content.ReadAsStringAsync();
+
+            List<ScoreboardEntryModel>? playerData = JsonConvert.DeserializeObject<List<ScoreboardEntryModel>>(response);
+            if (playerData == null || playerData.Count < 1)
+            {
+                await loggingService.LogAsync(new(LogSeverity.Error, "ScoreboardService", "playerData is null"));
                 return null;
+            }
 
-            return CreateScoreboardEmbed(await CreateScoreboardAsync(new ScoreboardEntryModel[] { scoreboardEntry }));
+            return CreateScoreboardEmbed(await CreateScoreboardAsync(new ScoreboardEntryModel[] { playerData[0] }));
         }
-
-        //Sucht einen Scoreboard Eintrag anhand des Benutzernamens
-        public async Task<ScoreboardEntryModel?> GetScoreboardEntryAsync(string username)
-        {
-            Scoreboard ??= await GetScoreboardAsync();
-            return Scoreboard?.Where(entry => entry.Name.Equals(username, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-        }
-
 
 
         //Parsed das Json Scoreboard von der HTW Seite
         private async Task<List<ScoreboardEntryModel>> GetScoreboardAsync()
         {
-            loggingService.Log(new(LogSeverity.Info, "ChallengeService", "Requesting api/highscore"));
+            loggingService.Log(new(LogSeverity.Info, "ChallengeService", "Requesting api/top100"));
             HttpClient httpClient = httpClientFactory.CreateClient("client");
 
-            HttpRequestMessage requestMessage = new(HttpMethod.Get, "api/highscore");
+            HttpRequestMessage requestMessage = new(HttpMethod.Get, "api/top100");
             HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage);
 
             return JsonConvert.DeserializeObject<List<ScoreboardEntryModel>>(await responseMessage.Content.ReadAsStringAsync()) ?? new List<ScoreboardEntryModel>();
