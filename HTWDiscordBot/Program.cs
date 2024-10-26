@@ -1,15 +1,17 @@
 ﻿using Discord.Interactions;
 using Discord.WebSocket;
+using HTWDiscordBot.Extensions;
 using HTWDiscordBot.Handlers;
 using HTWDiscordBot.Services;
 using HTWDiscordBot.Services.HTW;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace HTWDiscordBot
 {
     public class Program
     {
-        private readonly IServiceProvider services;
         private readonly DiscordSocketClient client;
         private readonly DiscordService discordService;
         private readonly LoggingService loggingService;
@@ -17,11 +19,18 @@ namespace HTWDiscordBot
         private readonly InteractionHandler interactionHandler;
         private readonly HTWUserService userService;
         private readonly RoleService roleService;
+        private readonly ForumService forumService;
+        private readonly WebApplication app;
         private bool initialized = false;
 
-        public Program()
+        private Program()
         {
-            services = CreateProvider();
+            var builder = WebApplication.CreateBuilder();
+            builder.WebHost.UseUrls("http://*:5050");
+            builder.Services.AddEndpointDefinitions(typeof(Program));
+            CreateProvider(builder.Services);
+
+            IServiceProvider services = builder.Services.BuildServiceProvider();
             client = services.GetRequiredService<DiscordSocketClient>();
             discordService = services.GetRequiredService<DiscordService>();
             loggingService = services.GetRequiredService<LoggingService>();
@@ -29,20 +38,25 @@ namespace HTWDiscordBot
             interactionHandler = services.GetRequiredService<InteractionHandler>();
             userService = services.GetRequiredService<HTWUserService>();
             roleService = services.GetRequiredService<RoleService>();
+            forumService = services.GetRequiredService<ForumService>();
+
+            app = builder.Build();
+            app.UseHttpsRedirection();
+            app.UseEndpointDefinitions();
         }
 
         public static Task Main() => new Program().MainAsync();
 
-        public async Task MainAsync()
+        private async Task MainAsync()
         {
             client.Ready += Client_ReadyAsync;
             client.Log += loggingService.LogAsync;
 
             await userService.InitializeAsync();
-            await discordService.InitializeAsync();
             await interactionHandler.InitializeAsync();
+            await discordService.InitializeAsync();
 
-            await Task.Delay(Timeout.Infinite);
+            await app.RunAsync();
         }
 
         //Wird ausgeführt, wenn der Bot bereit ist
@@ -54,12 +68,13 @@ namespace HTWDiscordBot
 
             await htwService.InitializeAsync();
             await roleService.InitializeAsync();
+            await forumService.InitializeAsync();
         }
 
         //ServiceProvider für Dependency Injection
-        private static IServiceProvider CreateProvider()
+        private static void CreateProvider(IServiceCollection services)
         {
-            IServiceCollection collection = new ServiceCollection()
+            services
                 .AddSingleton<LoggingService>()
                 .AddSingleton<ConfigService>()
                 .AddSingleton(DiscordService.CreateDiscordSockteConfig())
@@ -71,19 +86,16 @@ namespace HTWDiscordBot
                 .AddSingleton<ChallengeService>()
                 .AddSingleton<InteractionHandler>()
                 .AddSingleton<HTWUserService>()
-                .AddSingleton<RoleService>();
-            collection.AddHttpClient("client", httpClient =>
-            {
-                httpClient.BaseAddress = new Uri(Config.Url);
-
-            }).ConfigurePrimaryHttpMessageHandler((c) =>
-            new HttpClientHandler()
-            {
-                UseCookies = false,
-                AllowAutoRedirect = false
-            });
-
-            return collection.BuildServiceProvider();
+                .AddSingleton<RoleService>()
+                .AddSingleton<ForumService>()
+                .AddSingleton<IDbService, SqliteDbService>();
+            services.AddHttpClient("client", httpClient => { httpClient.BaseAddress = new Uri(Config.Url); })
+                .ConfigurePrimaryHttpMessageHandler((c) =>
+                    new HttpClientHandler()
+                    {
+                        UseCookies = false,
+                        AllowAutoRedirect = false
+                    });
         }
     }
 }

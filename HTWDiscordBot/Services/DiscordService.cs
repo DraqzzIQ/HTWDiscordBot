@@ -32,9 +32,9 @@ namespace HTWDiscordBot.Services
         {
             DiscordSocketConfig discordSocketConfig = new()
             {
-                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers | GatewayIntents.GuildPresences,
+                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers | GatewayIntents.GuildPresences | GatewayIntents.MessageContent,
                 LogGatewayIntentWarnings = false,
-                DefaultRatelimitCallback = info => RatelimitCallback(info)
+                DefaultRatelimitCallback = RatelimitCallback
             };
 
             return discordSocketConfig;

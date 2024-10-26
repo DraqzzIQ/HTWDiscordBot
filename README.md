@@ -22,11 +22,14 @@ Dadurch wird sein aktueller Rank neben seinem Namen angezeigt.
   "Token": "",
   "ScoreboardChannelID": 0,
   "ChallengeChannelID": 0,
+  "GermanForumChannelID": 0,
+  "EnglishForumChannelID": 0,
   "RolesChannelID": 0,
   "ActiveHackerRoleID": 0,
   "CTFRoleID": 0,
   "ActiveHackerMessageID": 0,
   "CTFMessageID": 0,
-  "ServerID": 0
+  "ServerID": 0,
+  "AuthKey": ""
 }
 ```
