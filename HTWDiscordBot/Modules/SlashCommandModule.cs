@@ -1,50 +1,41 @@
 ﻿using Discord;
 using Discord.Interactions;
-using HTWDiscordBot.Services.HTW;
+using HtwDiscordBot.Services.Htw;
 
-namespace HTWDiscordBot.Modules
+namespace HtwDiscordBot.Modules;
+
+public class SlashCommandModule(ScoreboardService scoreboardService, HtwUserService verifyUserService)
+    : InteractionModuleBase<SocketInteractionContext>
 {
-    //Muss public sein, um vom InteractionHandler erkannt zu werden
-    public class SlashCommandModule : InteractionModuleBase<SocketInteractionContext>
+    [SlashCommand("login", "Logge dich ein, damit dein Rank neben deinem Benutzernamen angezeigt wird.")]
+    public async Task Login()
     {
-        private readonly ScoreboardService scoreboardService;
-        private readonly HTWUserService verifyUserService;
+        ComponentBuilder componentBuilder = new ComponentBuilder()
+            .WithButton(label: "Get Token", style: ButtonStyle.Link, url: "https://hack.arrrg.de/token")
+            .WithButton(label: "Login", customId: "login-button", style: ButtonStyle.Primary, row: 1);
 
-        public SlashCommandModule(ScoreboardService scoreboardService, HTWUserService verifyUserService)
-        {
-            this.scoreboardService = scoreboardService;
-            this.verifyUserService = verifyUserService;
-        }
+        await RespondAsync(
+            "Öffne den Link, kopiere den Token und drücke auf **Login** um deinen Htw Account zu verknüpfen",
+            components: componentBuilder.Build(), ephemeral: true);
+    }
 
-        //Gibt ein Modal zurück mit dem man sich einloggen kann
-        [SlashCommand("login", "Logge dich ein, damit dein Rank neben deinem Benutzernamen angezeigt wird.")]
-        public async Task Login()
-        {
-            ComponentBuilder componentBuilder = new ComponentBuilder()
-                .WithButton(label: "Get Token", style: ButtonStyle.Link, url: "https://hack.arrrg.de/token")
-                .WithButton(label: "Login", customId: "login-button", style: ButtonStyle.Primary, row: 1);
+    [SlashCommand("logout", "Dein Rank wird nicht mehr neben deinem Benutzernamen angezeigt")]
+    public async Task Logout()
+    {
+        await verifyUserService.LogoutAsync(Context.User.Id);
+        await RespondAsync("Ausloggen erfolgreich.", ephemeral: true);
+    }
 
-            await RespondAsync("Öffne den Link, kopiere den Token und drücke auf **Login** um deinen HTW Account zu verknüpfen", components: componentBuilder.Build(), ephemeral: true);
-        }
+    [SlashCommand("player", "Zeigt den Platz auf dem Scoreboard und punkte eines Spielers an")]
+    public async Task Playerdata([Summary(description: "Der Hack The Web Username")] string username)
+    {
+        await DeferAsync();
 
-        [SlashCommand("logout", "Dein Rank wird nicht mehr neben deinem Benutzernamen angezeigt")]
-        public async Task Logout()
-        {
-            await verifyUserService.LogoutAsync(Context.User.Id);
-            await RespondAsync("Ausloggen erfolgreich.", ephemeral: true);
-        }
+        Embed? embed = await scoreboardService.GetPlayerdataAsync(username);
 
-        [SlashCommand("player", "Zeigt den Platz auf dem Scoreboard und punkte eines Spielers an")]
-        public async Task Playerdata([Summary(description: "Der Hack The Web Username")] string username)
-        {
-            await DeferAsync();
-
-            Embed? embed = await scoreboardService.GetPlayerdataAsync(username);
-
-            if (embed != null)
-                await Context.Interaction.FollowupAsync(embed: embed);
-            else
-                await Context.Interaction.FollowupAsync("Username wurde nicht gefunden");
-        }
+        if (embed != null)
+            await Context.Interaction.FollowupAsync(embed: embed);
+        else
+            await Context.Interaction.FollowupAsync("Username wurde nicht gefunden");
     }
 }

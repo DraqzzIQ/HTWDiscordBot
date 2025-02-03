@@ -1,4 +1,5 @@
-﻿namespace HTWDiscordBot.Models;
+﻿namespace HtwDiscordBot.Models;
+
 public class ScoreboardEntryModel
 {
     public string Name { get; set; }

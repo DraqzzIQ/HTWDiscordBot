@@ -1,49 +1,41 @@
 ﻿using Discord;
 using Discord.WebSocket;
 
-namespace HTWDiscordBot.Services
+namespace HtwDiscordBot.Services;
+
+public class DiscordService(ConfigService configService, DiscordSocketClient client)
 {
-    public class DiscordService
+    public async Task InitializeAsync()
     {
-        private readonly DiscordSocketClient client;
-        private readonly ConfigService configService;
+        client.Ready += Client_ReadyAsync;
+        await client.LoginAsync(TokenType.Bot, configService.Config.Token);
+        await client.StartAsync();
+    }
 
-        public DiscordService(ConfigService configService, DiscordSocketClient client)
+    private async Task Client_ReadyAsync()
+    {
+        await client.SetGameAsync("Hack The Web", type: ActivityType.Playing);
+    }
+
+    public static DiscordSocketConfig CreateDiscordSocketConfig()
+    {
+        DiscordSocketConfig discordSocketConfig = new()
         {
-            this.configService = configService;
-            this.client = client;
-        }
+            GatewayIntents = GatewayIntents.AllUnprivileged |
+                             GatewayIntents.GuildMembers |
+                             GatewayIntents.GuildPresences |
+                             GatewayIntents.MessageContent,
+            LogGatewayIntentWarnings = false,
+            DefaultRatelimitCallback = RatelimitCallback
+        };
 
-        public async Task InitializeAsync()
-        {
-            client.Ready += Client_ReadyAsync;
-            await client.LoginAsync(TokenType.Bot, configService.Config.Token);
-            await client.StartAsync();
-        }
+        return discordSocketConfig;
+    }
 
-        //Wird ausgeführt, wenn der Bot bereit ist
-        private async Task Client_ReadyAsync()
-        {
-            await client.SetGameAsync("Hack The Web", type: ActivityType.Playing);
-        }
-
-        //Konfiguriert die DiscordSocketConfig
-        public static DiscordSocketConfig CreateDiscordSockteConfig()
-        {
-            DiscordSocketConfig discordSocketConfig = new()
-            {
-                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers | GatewayIntents.GuildPresences | GatewayIntents.MessageContent,
-                LogGatewayIntentWarnings = false,
-                DefaultRatelimitCallback = RatelimitCallback
-            };
-
-            return discordSocketConfig;
-        }
-
-        private static async Task RatelimitCallback(IRateLimitInfo info)
-        {
-            if (info.Remaining < 1)
-                Console.WriteLine($"[RateLimit/{LogSeverity.Warning}] Global: {info.IsGlobal}, Limit: {info.Limit}, Remaining: {info.Remaining}, RetryAfter: {info.RetryAfter}, ResetsAfter: {info.ResetAfter?.TotalSeconds}, Lag: {info.Lag?.TotalMilliseconds}");
-        }
+    private static async Task RatelimitCallback(IRateLimitInfo info)
+    {
+        if (info.Remaining < 1)
+            Console.WriteLine(
+                $"[RateLimit/{LogSeverity.Warning}] Global: {info.IsGlobal}, Limit: {info.Limit}, Remaining: {info.Remaining}, RetryAfter: {info.RetryAfter}, ResetsAfter: {info.ResetAfter?.TotalSeconds}, Lag: {info.Lag?.TotalMilliseconds}");
     }
 }

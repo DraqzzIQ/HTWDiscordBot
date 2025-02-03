@@ -1,101 +1,85 @@
 ﻿using Discord.Interactions;
 using Discord.WebSocket;
-using HTWDiscordBot.Extensions;
-using HTWDiscordBot.Handlers;
-using HTWDiscordBot.Services;
-using HTWDiscordBot.Services.HTW;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
+using HtwDiscordBot.Handlers;
+using HtwDiscordBot.Services;
+using HtwDiscordBot.Services.Htw;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace HTWDiscordBot
+namespace HtwDiscordBot;
+
+public class Program
 {
-    public class Program
+    private readonly IServiceProvider services;
+    private readonly DiscordSocketClient client;
+    private readonly DiscordService discordService;
+    private readonly LoggingService loggingService;
+    private readonly HtwService htwService;
+    private readonly InteractionHandler interactionHandler;
+    private readonly HtwUserService userService;
+    private readonly RoleService roleService;
+    private bool initialized = false;
+
+    private Program()
     {
-        private readonly DiscordSocketClient client;
-        private readonly DiscordService discordService;
-        private readonly LoggingService loggingService;
-        private readonly HTWService htwService;
-        private readonly InteractionHandler interactionHandler;
-        private readonly HTWUserService userService;
-        private readonly RoleService roleService;
-        private readonly ForumService forumService;
-        private readonly WebApplication app;
-        private bool initialized = false;
+        services = CreateProvider();
+        client = services.GetRequiredService<DiscordSocketClient>();
+        discordService = services.GetRequiredService<DiscordService>();
+        loggingService = services.GetRequiredService<LoggingService>();
+        htwService = services.GetRequiredService<HtwService>();
+        interactionHandler = services.GetRequiredService<InteractionHandler>();
+        userService = services.GetRequiredService<HtwUserService>();
+        roleService = services.GetRequiredService<RoleService>();
+    }
 
-        private Program()
-        {
-            var builder = WebApplication.CreateBuilder();
-            builder.WebHost.UseUrls("http://*:5050");
-            builder.Services.AddEndpointDefinitions(typeof(Program));
-            CreateProvider(builder.Services);
+    public static Task Main() => new Program().MainAsync();
 
-            IServiceProvider services = builder.Services.BuildServiceProvider();
-            client = services.GetRequiredService<DiscordSocketClient>();
-            discordService = services.GetRequiredService<DiscordService>();
-            loggingService = services.GetRequiredService<LoggingService>();
-            htwService = services.GetRequiredService<HTWService>();
-            interactionHandler = services.GetRequiredService<InteractionHandler>();
-            userService = services.GetRequiredService<HTWUserService>();
-            roleService = services.GetRequiredService<RoleService>();
-            forumService = services.GetRequiredService<ForumService>();
+    private async Task MainAsync()
+    {
+        client.Ready += Client_ReadyAsync;
+        client.Log += loggingService.LogAsync;
 
-            app = builder.Build();
-            app.UseHttpsRedirection();
-            app.UseEndpointDefinitions();
-        }
+        await userService.InitializeAsync();
+        await interactionHandler.InitializeAsync();
+        await discordService.InitializeAsync();
 
-        public static Task Main() => new Program().MainAsync();
+        await Task.Delay(Timeout.Infinite);
+    }
 
-        private async Task MainAsync()
-        {
-            client.Ready += Client_ReadyAsync;
-            client.Log += loggingService.LogAsync;
+    private async Task Client_ReadyAsync()
+    {
+        // don't run this method more than once
+        if (initialized) return;
 
-            await userService.InitializeAsync();
-            await interactionHandler.InitializeAsync();
-            await discordService.InitializeAsync();
+        initialized = true;
 
-            await app.RunAsync();
-        }
+        await htwService.InitializeAsync();
+        await roleService.InitializeAsync();
+    }
 
-        //Wird ausgeführt, wenn der Bot bereit ist
-        private async Task Client_ReadyAsync()
-        {
-            //Verhindert das die Loops mehrfach ausgeführt werden, wenn discord reconnected
-            if (initialized) return;
-            initialized = true;
+    private static ServiceProvider CreateProvider()
+    {
+        IServiceCollection collection = new ServiceCollection()
+            .AddSingleton<LoggingService>()
+            .AddSingleton<ConfigService>()
+            .AddSingleton(DiscordService.CreateDiscordSocketConfig())
+            .AddSingleton<DiscordSocketClient>()
+            .AddSingleton<DiscordService>()
+            .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
+            .AddSingleton<HtwService>()
+            .AddSingleton<ScoreboardService>()
+            .AddSingleton<ChallengeService>()
+            .AddSingleton<InteractionHandler>()
+            .AddSingleton<HtwUserService>()
+            .AddSingleton<RoleService>();
 
-            await htwService.InitializeAsync();
-            await roleService.InitializeAsync();
-            await forumService.InitializeAsync();
-        }
+        collection.AddHttpClient("client", httpClient => { httpClient.BaseAddress = new Uri(Config.Url); })
+            .ConfigurePrimaryHttpMessageHandler((c) =>
+                new HttpClientHandler()
+                {
+                    UseCookies = false,
+                    AllowAutoRedirect = false
+                });
 
-        //ServiceProvider für Dependency Injection
-        private static void CreateProvider(IServiceCollection services)
-        {
-            services
-                .AddSingleton<LoggingService>()
-                .AddSingleton<ConfigService>()
-                .AddSingleton(DiscordService.CreateDiscordSockteConfig())
-                .AddSingleton<DiscordSocketClient>()
-                .AddSingleton<DiscordService>()
-                .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
-                .AddSingleton<HTWService>()
-                .AddSingleton<ScoreboardService>()
-                .AddSingleton<ChallengeService>()
-                .AddSingleton<InteractionHandler>()
-                .AddSingleton<HTWUserService>()
-                .AddSingleton<RoleService>()
-                .AddSingleton<ForumService>()
-                .AddSingleton<IDbService, SqliteDbService>();
-            services.AddHttpClient("client", httpClient => { httpClient.BaseAddress = new Uri(Config.Url); })
-                .ConfigurePrimaryHttpMessageHandler((c) =>
-                    new HttpClientHandler()
-                    {
-                        UseCookies = false,
-                        AllowAutoRedirect = false
-                    });
-        }
+        return collection.BuildServiceProvider();
     }
 }

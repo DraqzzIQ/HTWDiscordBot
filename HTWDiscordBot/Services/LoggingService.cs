@@ -1,20 +1,18 @@
 ﻿using Discord;
 
-namespace HTWDiscordBot.Services
+namespace HtwDiscordBot.Services;
+
+public class LoggingService
 {
-    //Stellt Logging Methoden bereit
-    public class LoggingService
+    public Task LogAsync(LogMessage message)
     {
-        public Task LogAsync(LogMessage message)
-        {
-            Console.WriteLine($"[General/{message.Severity}] {message}");
+        Console.WriteLine($"[General/{message.Severity}] {message}");
 
-            return Task.CompletedTask;
-        }
+        return Task.CompletedTask;
+    }
 
-        public void Log(LogMessage message)
-        {
-            Console.WriteLine($"[General/{message.Severity}] {message}");
-        }
+    public void Log(LogMessage message)
+    {
+        Console.WriteLine($"[General/{message.Severity}] {message}");
     }
 }
