@@ -116,7 +116,8 @@ public class HtwUserService(
                 continue;
             }
 
-            await user.ModifyAsync(x => x.Nickname = $"{user.Username} #{scoreboardEntryModel.Rank}");
+            int usernameLength = 32 - scoreboardEntryModel.Rank.ToString().Length + 2;
+            await user.ModifyAsync(x => x.Nickname = $"{scoreboardEntryModel.Name[..Math.Min(usernameLength, scoreboardEntryModel.Name.Length)]} #{scoreboardEntryModel.Rank}");
             await Task.Delay(1000); // wait 1 second to not get rate limited
         }
     }
