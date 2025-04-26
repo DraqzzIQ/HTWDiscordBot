@@ -51,7 +51,7 @@ public class HtwUserService(
         SocketGuild guild = client.GetGuild(configService.Config.ServerID);
         SocketGuildUser? user = guild.GetUser(id);
 
-        await user.ModifyAsync(x => x.Nickname = user.Username);
+        await user.ModifyAsync(x => x.Nickname = user.GlobalName);
 
         verifiedUsers.Remove(id);
         await WriteDictionaryAsync(verifiedUsers);
